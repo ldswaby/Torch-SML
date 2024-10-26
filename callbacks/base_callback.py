@@ -1,6 +1,7 @@
 import warnings
 from typing import Optional
 
+
 class Callback:
     """Base class used to build new callbacks.
     CalLbacks can be passed to AML train/test functions in order to hook into
@@ -53,7 +54,7 @@ class Callback:
                 future. Defaults to None.
         """
 
-    def on_test_batch_end (self, batch, logs: Optional[dict] = None):
+    def on_test_batch_end(self, batch, logs: Optional[dict] = None):
         """Called at the end of a batch in "test" methods. Also called at the
         end of a validation batch in the train™ methods, if validation data is
         provided. Subclasses should override for any actions to run.
@@ -130,14 +131,6 @@ class Callback:
                 'outputs', 'embeddings', 'Losses']. Defaults to None.
         """
 
-    def set_model (self, model):
-        """Sets callback model
-
-        Args:
-            model (_type_): _description  #TODO
-        """
-        self.model = model
-
     @property
     def contains_model(self) -> bool:
         """Checks if base class contains model
@@ -149,13 +142,27 @@ class Callback:
 
     @property
     def model(self):
+        """_summary_
+
+        Returns:
+            _type_: _description_
+        """
         if not self.contains_model:
             warnings.warn(
                 f'{self.__class__.__name__} instance has no _model attribute,'
                 f' which may lead to unexpected behaviour. For proper use of'
                 f' this property, set a model using the set _model method')
             return
-        return self.model
+        return self._model
+
+    @model.setter
+    def model(self, model):
+        """Sets callback model
+
+        Args:
+            model (_type_): _description  #TODO
+        """
+        self._model = model
 
     @property
     def stop_training(self) -> bool:
@@ -165,3 +172,9 @@ class Callback:
             bool
         """
         return self._stop_training if hasattr(self, '_stop_training') else False
+
+    @stop_training.setter
+    def stop_training(self, value: bool):
+        """Setter method for _stop_training attribute
+        """
+        self._stop_training = value
