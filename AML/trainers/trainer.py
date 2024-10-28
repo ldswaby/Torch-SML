@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import DataLoader
 
+
 class Trainer:
     def __init__(self, model, dataset, loss_fn, optimizer, callbacks, config):
         self.model = model
@@ -10,7 +11,8 @@ class Trainer:
         self.callbacks = callbacks
         self.config = config
 
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device(
+            "cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)
 
         self.data_loader = DataLoader(
@@ -30,7 +32,8 @@ class Trainer:
                 for callback in self.callbacks:
                     callback.on_batch_begin(batch_idx)
 
-                inputs, targets = inputs.to(self.device), targets.to(self.device)
+                inputs, targets = inputs.to(
+                    self.device), targets.to(self.device)
                 self.optimizer.zero_grad()
                 outputs = self.model(inputs)
                 loss = self.loss_fn(outputs, targets)
@@ -42,7 +45,8 @@ class Trainer:
                     callback.on_batch_end(batch_idx)
 
             avg_loss = running_loss / len(self.data_loader)
-            print(f"Epoch [{epoch}/{self.config['num_epochs']}], Loss: {avg_loss:.4f}")
+            print(
+                f"Epoch [{epoch}/{self.config['num_epochs']}], Loss: {avg_loss:.4f}")
 
             for callback in self.callbacks:
                 callback.on_epoch_end(epoch)

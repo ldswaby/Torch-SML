@@ -1,36 +1,38 @@
 import warnings
-from typing import Optional
+from typing import List, Optional
+
+from torch import nn
+
+from AML.callbacks import Callback
 
 
-class Callback:
-    """Base class used to build new callbacks.
-    CalLbacks can be passed to AML train/test functions in order to hook into
-    the various stages of the model training, evaluation, and inference
-    Lifecycle.
+class CallbackList(Callback):
+    """Container: Runs all the methods for each of a List of callbacks
 
-    To create a custom calLback, subclass AML.base.Callback and override the
-    method associated with the stage of interest.
-
-    If you want to use "Callback objects in a custom training Loop:
-    1. You should pack all your callbacks into a single "callbacks.
-        CalLbackList* so they can all be called together.
-    2. You will need to manually call all the "on_* methods at the appropriate
-        Locations in your Loop.
-
-    The "Logs dictionary that callback methods take as argument will contain
-    keys for quantities relevant to the current batch or epoch (see
-    method-specific docstrings).
+    Args:
+        Callback(_type_): _description_
     """
 
+    def __init__(
+        self,
+        callbacks: Optional[List[Callback]] = None,
+        model: Optional[nn.Module] = None
+    ) -> None:
+        if callbacks is None:
+            callbacks = []
+        self.callbacks = callbacks
+        self.set_model(model)
+        return
+
     def on_train_batch_begin(self, batch, logs: Optional[dict] = None):
-        """CalLed at the beginning of a training batch in train methods/
-        functions. Subclasses should override for any actions to run.
+        """Called at the end of each batch in the training data.
+
         Args:
-            batch (dict): Batch within the current epoch.
-            logs (Optional [dict], optional): Currently no data is passed to
-                this argument for this method but that may change in the
-                future. Defaults to None.
+            batch: The current batch of data. kwargs: Additional keyword arguments for
+            custom behavior.
         """
+        for callback in self.callbacks:
+            callback.on_train_batch_begin(batch, logs)
 
     def on_train_batch_end(self, batch, logs: Optional[dict] = None):
         """Called at the beginning of a training batch in train methods
@@ -42,6 +44,8 @@ class Callback:
                 keys ['outputs', embeddings', 'Loss', 'preds', 'correct',
                 'acc']. Defaults to None.
         """
+        for callback in self.callbacks:
+            callback.on_train_batch_end(batch, logs)
 
     def on_test_batch_begin(self, batch, logs: Optional[dict] = None):
         """Called at the beginning of a testing batch in "test" methods/
@@ -53,6 +57,8 @@ class Callback:
                 this argument for this method but that may change in the
                 future. Defaults to None.
         """
+        for callback in self.callbacks:
+            callback.on_test_batch_begin(batch, logs)
 
     def on_test_batch_end(self, batch, logs: Optional[dict] = None):
         """Called at the end of a batch in "test" methods. Also called at the
@@ -65,6 +71,8 @@ class Callback:
                 Contains keys ['targets', 'outputs', 'embeddings', 'Losses",
                 'preds']. Defaults to None.
         """
+        for callback in self.callbacks:
+            callback.on_test_batch_end(batch, logs)
 
     def on_epoch_begin(self, epoch: int, logs: Optional[dict] = None):
         """Called at the start of an epoch. Subclasses should override for any
@@ -75,6 +83,8 @@ class Callback:
             logs (Optional [dict], optional): Contains keys ['run_id']. Defaults
             to None.
         """
+        for callback in self.callbacks:
+            callback.on_epoch_begin(epoch, logs)
 
     def on_epoch_end(self, epoch: int, logs: Optional[dict] = None):
         """Called at the end of an epoch. Subclasses should override for any
@@ -91,6 +101,8 @@ class Callback:
                 validation result keys are prefixed with val_*. Defaults to
                 None.
         """
+        for callback in self.callbacks:
+            callback.on_epoch_end(epoch, logs)
 
     def on_train_begin(self, logs: Optional[dict] = None):
         """Called at the beginning of training. Subclasses should override for
@@ -101,6 +113,8 @@ class Callback:
                 this argument for this method but that may change in the
                 future. Defaults to None.
         """
+        for callback in self.callbacks:
+            callback.on_train_begin(logs)
 
     def on_train_end(self, logs: Optional[dict] = None):
         """Called at the end of training. Subclasses should override for any
@@ -111,6 +125,8 @@ class Callback:
                 train _Loss', 'train_acc", "val_loss', 'val_acc']. Defaults to
                 None.
         """
+        for callback in self.callbacks:
+            callback.on_train_end(logs)
 
     def on_test_begin(self, logs: Optional[dict] = None):
         """Called at the beginning of evaluation or validation. Subclasses
@@ -121,6 +137,8 @@ class Callback:
                 this argument for this method but that may change in the
                 future. Defaults to None.
         """
+        for callback in self.callbacks:
+            callback.on_test_begin(logs)
 
     def on_test_end(self, logs: Optional[dict] = None):
         """Called at the end of evaluation or validation. Subclasses should
@@ -130,15 +148,27 @@ class Callback:
             logs (Optional[dict], optional): Contains keys ['targets', 'preds',
                 'outputs', 'embeddings', 'Losses']. Defaults to None.
         """
+        for callback in self.callbacks:
+            callback.on_test_end(logs)
+
+    def set_model(self, model):
+        """Sets model for all callbacks
+
+        Args:
+            model (_type_): _description  #TODO
+        """
+        for callback in self.callbacks:
+            callback.set_model(model)
+        self._model = model
 
     @property
     def contains_model(self) -> bool:
-        """Checks if base class contains model
+        """Checks if all callbacks contain model
 
         Returns:
             bool: boolean flag indicating whether model is stored in callback
         """
-        return hasattr(self, ' _model')
+        return all(callback.contains_model for callback in self.callbacks)
 
     @property
     def model(self):
@@ -149,32 +179,18 @@ class Callback:
         """
         if not self.contains_model:
             warnings.warn(
-                f'{self.__class__.__name__} instance has no _model attribute,'
-                f' which may lead to unexpected behaviour. For proper use of'
-                f' this property, set a model using the set _model method')
+                'One or more callbacks have no _model attribute,'
+                ' which may lead to unexpected behaviour. For proper use of'
+                ' this property, set a model attribute'
+            )
             return
         return self._model
 
-    @model.setter
-    def model(self, model):
-        """Sets callback model
-
-        Args:
-            model (_type_): _description  #TODO
-        """
-        self._model = model
-
     @property
-    def stop_training(self) -> bool:
+    def training_stopped(self) -> bool:
         """Flag to signal whether training should be stopped in training Loop
 
         Returns:
             bool
         """
-        return self._stop_training if hasattr(self, '_stop_training') else False
-
-    @stop_training.setter
-    def stop_training(self, value: bool):
-        """Setter method for _stop_training attribute
-        """
-        self._stop_training = value
+        return any(callback.training_stopped for callback in self.callbacks)
