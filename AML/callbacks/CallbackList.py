@@ -18,9 +18,7 @@ class CallbackList(Callback):
         callbacks: Optional[List[Callback]] = None,
         model: Optional[nn.Module] = None
     ) -> None:
-        if callbacks is None:
-            callbacks = []
-        self.callbacks = callbacks
+        self.callbacks = callbacks if callbacks is not None else []
         self.set_model(model)
         return
 
