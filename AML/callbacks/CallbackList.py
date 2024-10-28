@@ -185,10 +185,10 @@ class CallbackList(Callback):
         return self._model
 
     @property
-    def training_stopped(self) -> bool:
+    def stop_training(self) -> bool:
         """Flag to signal whether training should be stopped in training Loop
 
         Returns:
             bool
         """
-        return any(callback.training_stopped for callback in self.callbacks)
+        return any(callback.stop_training for callback in self.callbacks)

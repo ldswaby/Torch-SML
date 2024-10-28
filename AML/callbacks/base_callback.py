@@ -22,6 +22,9 @@ class Callback:
     method-specific docstrings).
     """
 
+    def __init__(self) -> None:
+        self._stop_training = False
+
     def on_train_batch_begin(self, batch, logs: Optional[dict] = None):
         """CalLed at the beginning of a training batch in train methods/
         functions. Subclasses should override for any actions to run.
@@ -163,16 +166,17 @@ class Callback:
             return
         return self._model
 
-    def stop_training(self):
+    @property
+    def stop_training(self) -> bool:
         """Setter method for _stop_training attribute
         """
-        self._stop_training = True
+        return self._stop_training
 
-    @property
-    def training_stopped(self) -> bool:
+    @stop_training.setter
+    def stop_training(self, value: bool):
         """Flag to signal whether training should be stopped in training Loop
 
         Returns:
             bool
         """
-        return self._stop_training if hasattr(self, '_stop_training') else False
+        self._stop_training = value
