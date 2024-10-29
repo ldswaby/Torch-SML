@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from AML.callbacks import Callback, CallbackList
+from AML.callbacks.CallbackList import _process_callbacks
 
 
 def train_one_epoch(
@@ -31,45 +32,36 @@ def train_one_epoch(
     model.to(device)
     model.train()
 
-    # Callback init
-    callbacks = callbacks or []
-    if not isinstance(callbacks, CallbackList):
-        callbacks = CallbackList(callbacks, model)
-    else:
-        # Set model if absent in any callbacks
-        if not callbacks.contains_model:
-            callbacks.set_model(model)
+    callbacks = _process_callbacks(callbacks, model)
 
     # batch loop
     with tqdm(trainloader, unit=' batch', colour='green') as bepoch:
+
         for batch in bepoch:
-            if epoch_desciption:
-                bepoch.set_description(epoch_desciption)
+
+            # if epoch_desciption:
+            #     bepoch.set_description(epoch_desciption)
 
             # data onto device
             inputs = batch['inputs'].to(device)
             targets = batch['targets'].to(device)
 
             callbacks.on_train_batch_begin(batch)
-            batch_logs = {}
 
             # forward pass
-            batch_logs['outputs'], batch_logs['embeddings'] = model(inputs)
+            outputs = model(inputs)
             # compute loss
             # TODO: This needs to be modified to reflect however
             # our loss library ends up working. E.g. will it also accept
             # embeddings?
-            loss = criterion(batch_logs['outputs'], targets)
-            batch_logs['loss'] = loss.mean()
+            loss = criterion(outputs, targets)
 
-            # NOTE: this is running loss. Update to method Alex suggested?
-            epoch_loss.update(batch_logs['loss'].item(), targets.size(0))
             # backward pass and update weights
             optimizer.zero_grad()
-            batch_logs['loss'].backward()
+            loss.backward()
             optimizer.step()
 
-            # Schedulen step
+            # Scheduler step
             if lr_scheduler:
                 lr_scheduler.step()
 
@@ -82,3 +74,45 @@ def train_one_epoch(
             })
 
     return {'loss': epoch_loss.value, 'acc': epoch_acc.value}
+
+
+def train(
+    model,
+    trainloader: DataLoader,
+    optimizer: Optimizer,
+    criterion: Callable,
+    epochs: int,
+    evalloader: Optional[DataLoader] = None,
+    eval_interval: int = 1,
+    device: torch.device = torch.device('cpu'),
+    lr_scheduler: Optional[_LRScheduler] = None,
+    callbacks: Optional[Union[List[Callback], CallbackList]] = None
+):
+    model.to(device)
+
+    callbacks = _process_callbacks(callbacks, model)
+
+    callbacks.on_train_begin(run_logs)
+
+    for epoch in range(1, epochs + 1):
+
+        callbacks.on_epoch_begin(epoch)
+
+        # train
+        train_logs = train_one_epoch(
+            model, trainloader, optimizer, criterion, device, lr_scheduler, callbacks
+        )
+        epoch_logs.update({'train_' + k: v for k, v in train_logs.items()})
+
+        if evalloader and epoch % eval_interval == 0:
+            # TODO
+            pass
+
+        callbacks.on_epoch_end(epoch, epoch_logs)
+
+        if callbacks.stop_training:
+            break
+
+    callbacks.on_train_end(run_logs)
+
+    return run_logs

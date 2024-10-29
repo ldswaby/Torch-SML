@@ -1,0 +1,17 @@
+METRICS:
+  Train:
+    #----
+    Accuracy:
+      task: multiclass
+      num_classes: 4
+    #----
+  Test:
+    #----
+    Accuracy:
+      task: multiclass
+      num_classes: 4
+    F1Score:
+      task: multiclass
+      num_classes: 4
+      average: weighted
+    #----
