@@ -6,6 +6,7 @@ import torch.nn.functional as F
 from AML.utils.metrics import Metric
 
 __all__ = [
+    'Metrics',
     'Accuracy',
     'Precision',
     'Recall',
@@ -96,7 +97,23 @@ class Accuracy(Metric):
         Returns:
             float: The computed accuracy.
         """
-        return self.correct / self.total if self.total > 0 else 0.0
+        return self.correct / self.total if self.total > 0 else 0.
+
+    def __call__(self, preds: torch.Tensor, targets: torch.Tensor) -> float:
+        """
+        Computes the accuracy between predictions and targets without modifying internal state.
+
+        Args:
+            preds (torch.Tensor): Predicted class indices.
+            targets (torch.Tensor): Ground truth class indices.
+
+        Returns:
+            float: The computed accuracy.
+        """
+        with torch.no_grad():
+            correct = (preds == targets).sum().item()
+            total = targets.size(0)
+            return correct / total if total > 0 else 0.0
 
 
 class Precision(Metric):
@@ -156,6 +173,33 @@ class Precision(Metric):
         else:
             return precision  # Returns per-class precision as a tensor
 
+    def __call__(self, preds: torch.Tensor, targets: torch.Tensor) -> float:
+        """
+        Computes the precision between predictions and targets without modifying internal state.
+
+        Args:
+            preds (torch.Tensor): Predicted class indices.
+            targets (torch.Tensor): Ground truth class indices.
+
+        Returns:
+            float: The computed precision score.
+        """
+        with torch.no_grad():
+            preds_one_hot = F.one_hot(preds, num_classes=self.num_classes)
+            targets_one_hot = F.one_hot(targets, num_classes=self.num_classes)
+            true_positives = (
+                preds_one_hot & targets_one_hot).sum(dim=0).float()
+            predicted_positives = preds_one_hot.sum(dim=0).float()
+            precision = true_positives / (predicted_positives + 1e-7)
+            if self.average == 'macro':
+                return precision.mean().item()
+            elif self.average == 'micro':
+                total_tp = true_positives.sum()
+                total_pp = predicted_positives.sum()
+                return (total_tp / (total_pp + 1e-7)).item()
+            else:
+                return precision  # Returns per-class precision as a tensor
+
 
 class Recall(Metric):
     """
@@ -212,6 +256,33 @@ class Recall(Metric):
             return (total_tp / (total_ap + 1e-7)).item()
         else:
             return recall  # Returns per-class recall as a tensor
+
+    def __call__(self, preds: torch.Tensor, targets: torch.Tensor) -> float:
+        """
+        Computes the recall between predictions and targets without modifying internal state.
+
+        Args:
+            preds (torch.Tensor): Predicted class indices.
+            targets (torch.Tensor): Ground truth class indices.
+
+        Returns:
+            float: The computed recall score.
+        """
+        with torch.no_grad():
+            preds_one_hot = F.one_hot(preds, num_classes=self.num_classes)
+            targets_one_hot = F.one_hot(targets, num_classes=self.num_classes)
+            true_positives = (
+                preds_one_hot & targets_one_hot).sum(dim=0).float()
+            actual_positives = targets_one_hot.sum(dim=0).float()
+            recall = true_positives / (actual_positives + 1e-7)
+            if self.average == 'macro':
+                return recall.mean().item()
+            elif self.average == 'micro':
+                total_tp = true_positives.sum()
+                total_ap = actual_positives.sum()
+                return (total_tp / (total_ap + 1e-7)).item()
+            else:
+                return recall  # Returns per-class recall as a tensor
 
 
 class F1Score(Metric):
@@ -275,6 +346,41 @@ class F1Score(Metric):
                 return f1  # Returns per-class F1 scores as tensor
         else:
             return 2 * (precision * recall) / (precision + recall + 1e-7)
+
+    def __call__(self, preds: torch.Tensor, targets: torch.Tensor) -> float:
+        """
+        Computes the F1 score between predictions and targets without modifying internal state.
+
+        Args:
+            preds (torch.Tensor): Predicted class indices.
+            targets (torch.Tensor): Ground truth class indices.
+
+        Returns:
+            float: The computed F1 score.
+        """
+        with torch.no_grad():
+            preds_one_hot = F.one_hot(preds, num_classes=self.num_classes)
+            targets_one_hot = F.one_hot(targets, num_classes=self.num_classes)
+            tp = (preds_one_hot & targets_one_hot).sum(dim=0).float()
+            pp = preds_one_hot.sum(dim=0).float()
+            ap = targets_one_hot.sum(dim=0).float()
+            precision = tp / (pp + 1e-7)
+            recall = tp / (ap + 1e-7)
+            f1 = 2 * (precision * recall) / (precision + recall + 1e-7)
+            if self.average == 'macro':
+                return f1.mean().item()
+            elif self.average == 'micro':
+                total_tp = tp.sum()
+                total_pp = pp.sum()
+                total_ap = ap.sum()
+                precision_micro = total_tp / (total_pp + 1e-7)
+                recall_micro = total_tp / (total_ap + 1e-7)
+                f1_micro = 2 * (precision_micro * recall_micro) / (
+                    precision_micro + recall_micro + 1e-7
+                )
+                return f1_micro.item()
+            else:
+                return f1  # Returns per-class F1 scores as tensor
 
 
 class ConfusionMatrix(Metric):

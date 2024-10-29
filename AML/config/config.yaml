@@ -26,3 +26,7 @@ callbacks:
 training:
   num_epochs: 10
   batch_size: 64
+
+METRICS:
+  Accuracy:
+    task: multiclass
