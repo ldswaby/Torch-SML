@@ -5,6 +5,16 @@ METRICS:
       task: multiclass
       num_classes: 4
     #----
+  Validation:
+    #----
+    Accuracy:
+      task: multiclass
+      num_classes: 4
+    F1Score:
+      task: multiclass
+      num_classes: 4
+      average: weighted
+    #----
   Test:
     #----
     Accuracy:
