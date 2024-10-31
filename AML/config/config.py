@@ -1,0 +1,114 @@
+import sys
+from typing import Dict, List, Optional
+
+import yaml
+from cerberus import Validator, errors
+from torch import optim
+
+from AML.models import MODEL_REGISTRY
+from AML.utils import fetch_pkg_subclasses
+
+# Optional vars
+model_opts = MODEL_REGISTRY.list_keys()
+optimizer_opts = fetch_pkg_subclasses(optim, optim.Optimizer).keys()
+device_opts = ['cpu', 'cuda', 'mps']
+
+# Arg checks
+BOOL = {'type': 'boolean'}
+STR = {'type': 'string'}
+INT = {'type': 'integer'}
+FLOAT = {'type': 'float'}
+LIST = {'type': 'list'}
+ANY = {'type': 'any'}
+
+KWARGS_DICT = {
+    'type': 'dict',
+    'schema': {},
+    'keysrules': STR,
+    'allow_unknown': True,
+    'default': {}
+}
+
+NATURAL_NUMBER = INT | {'min': 1}
+WHOLE_NUMBER = INT | {'min': 0}
+POSITIVE_REAL = FLOAT | {'min': 0.0}
+
+
+def RANGE(min, max): return {'min': min, 'max': max}
+def OPTIONS(opts): return {'allowed': opts}
+
+
+SCHEMA = {
+    'MODEL': {
+        'type': 'dict',
+        'schema': {
+            'name': OPTIONS(model_opts),
+            'kwargs': KWARGS_DICT
+        },
+    },
+    'METRICS': {
+        'type': 'dict',
+        'schema': {
+            'Train': KWARGS_DICT,
+            'Test': KWARGS_DICT,
+            'Validation': KWARGS_DICT,
+        }
+    }
+
+}
+
+
+class Config(dict):
+
+    def __init__(self, file_path: str):
+        super().__init__()
+        with open(file_path, 'r', encoding='utf-8') as f:
+            self.update(yaml.safe_load(f))
+        self._validate()
+        return
+
+    def _error_msg(self, msg: str, path: str) -> str:
+        return f"Error in config field {path}: {msg}"
+
+    def _format_errors(self, errs: Dict[str, List], path: Optional[List[str]] = None):
+        msgs = []
+        path = path or []
+
+        for field, error_list in errs.items():
+            curr_path = path + [field]
+            for e in error_list:
+                if isinstance(e, dict):
+                    msgs.extend(self._format_errors(e, curr_path))
+                elif isinstance(e, str):
+                    msgs.append(self._error_msg(e, curr_path))
+        return msgs
+
+    def _custom_checks(self):
+        """Additional custom arg checks should go here
+        """
+        msgs = []
+        # if self['TRAINING']['epochs'] < self['VALIDATION']['interval']:
+        #     msgs.append(self._error_msg(
+        #         "Must be less than or equal to ['training epochs]'",
+        #         ['validation', 'interval']
+        #     ))
+        return msgs
+
+    def _validate(self):
+        """Validate parsed config according to schema
+        """
+        errs = []
+        v = Validator(SCHEMA)
+
+        if not v.validate(self):
+            errs.extend(self._format_errors(v.errors))
+
+        # Custom checks
+        errs.extend(self._custom_checks())
+
+        if errs:
+            raise ValueError('\n'.join(errs))
+
+        # Add defaults
+        self.update(v.normalized(self))
+        return

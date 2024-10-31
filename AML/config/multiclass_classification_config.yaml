@@ -1,3 +1,13 @@
+MODEL:
+  name: MyCustomModel
+  kwargs:
+    #----
+    input_size: 32
+    hidden_size: 32
+    output_size: 32
+    #----
+
+
 METRICS:
   Train:
     #----

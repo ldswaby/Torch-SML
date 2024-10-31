@@ -9,9 +9,11 @@ from ..utils.registry import Registry
 METRIC_REGISTRY = Registry('Metric')
 
 from . import utils
-from .metrics import *
+# from .metrics import *
+from . import metrics
 
 modules = [
+    metrics,
     torchmetrics,
     classification,
     regression,

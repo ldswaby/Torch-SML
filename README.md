@@ -13,3 +13,10 @@ Repo for ML
   * There should be a `Metrics` object to track everything relevant to the problem, from accuracy and F1 scores to ROC curves and loss values. Configurable from yaml.
   * Model should output a dict containing subset of keys `['pred_classes', 'pred_values', 'logits', 'embeddings']`
   * Certain metrics will only be compatible with some of these outputs
+
+
+  # Models
+  * Ouputs have to be of the format taken by classification metrics (e.g. for classification model using multiclass accuracy, outputs should be e.g. [2,1,2,1,0])
+  * Models forward should output a dict, with keys:
+    * `'outputs'`: Whatever format required by loss/metrics
+    * `'logits'`: Unprocessed final layer outputs
