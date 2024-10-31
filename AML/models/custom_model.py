@@ -1,13 +1,18 @@
-from models.base_model import BaseModel
 import torch.nn as nn
-import torch.nn.functional as F
 
-class CustomModel(BaseModel):
-    def build_model(self):
-        self.fc1 = nn.Linear(self.config['input_size'], 128)
-        self.fc2 = nn.Linear(128, self.config['output_size'])
+from AML.models import MODEL_REGISTRY
+
+
+@MODEL_REGISTRY.register('MyCustomModel')
+class MyCustomModel(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size):
+        super(MyCustomModel, self).__init__()
+        self.fc1 = nn.Linear(input_size, hidden_size)
+        self.relu = nn.ReLU()
+        self.fc2 = nn.Linear(hidden_size, output_size)
 
     def forward(self, x):
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
-        return x
+        out = self.fc1(x)
+        out = self.relu(out)
+        out = self.fc2(out)
+        return out

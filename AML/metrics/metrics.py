@@ -6,7 +6,7 @@ https://lightning.ai/docs/torchmetrics/stable/pages/implement.html
 import torch
 from torch import Tensor
 
-from AML.metrics import Metric
+from AML.metrics import Metric, METRIC_REGISTRY
 
 __all__ = [
     'CustomAccuracy'
@@ -14,6 +14,7 @@ __all__ = [
 ]
 
 
+@METRIC_REGISTRY.register('CustomAccuracy')
 class CustomAccuracy(Metric):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

@@ -9,7 +9,9 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from AML.callbacks import Callback, CallbackList
-from AML.callbacks.CallbackList import _process_callbacks
+from AML.callbacks.utils import _process_callbacks
+from AML.metrics import Metric, MetricCollection
+from AML.metrics.utils import _process_metrics
 
 
 def train_one_epoch(
@@ -19,20 +21,32 @@ def train_one_epoch(
     criterion: Callable,
     device: torch.device = torch.device('cpu'),
     lr_scheduler: Optional[_LRScheduler] = None,
+    metrics: Optional[Union[List[Metric], MetricCollection]] = None,
     callbacks: Optional[Union[List[Callback], CallbackList]] = None
 ):
-    """Trains a torch.nn.Module model for one epoch
-    Angs:
-    model(nn. Module): _descniption_ trainloader(DataLoader): description optimizer(Optimizer): _description criterion(Callable):
-    _description_
-    epoch desciption(Optional[str], optional):
-    _description_. Defaults to None.
+    """_summary_
+
+    Args:
+        model (_type_): _description_
+        trainloader (DataLoader): _description_
+        optimizer (Optimizer): _description_
+        criterion (Callable): _description_
+        device (torch.device, optional): _description_. Defaults to torch.device('cpu').
+        lr_scheduler (Optional[_LRScheduler], optional): _description_. Defaults to None.
+        metrics (Optional[Metric], optional): _description_. Defaults to None.
+        callbacks (Optional[Union[List[Callback], CallbackList]], optional): _description_. Defaults to None.
+
     Returns:
+        _type_: _description_
     """
+    # Process callables
+    metrics = _process_metrics(metrics)
+    callbacks = _process_callbacks(callbacks, model)
+
     model.to(device)
     model.train()
-
-    callbacks = _process_callbacks(callbacks, model)
+    metrics.reset()
+    metrics.to(device)
 
     # batch loop
     with tqdm(trainloader, unit=' batch', colour='green') as bepoch:
@@ -68,10 +82,7 @@ def train_one_epoch(
             callbacks.on_train_batch_end(batch, batch_logs)
 
             # informative output
-            bepoch.set_postfix({
-                'Loss': float,
-                'Acc': float
-            })
+            bepoch.set_postfix({'Loss': float, 'Acc': float})
 
     return {'loss': epoch_loss.value, 'acc': epoch_acc.value}
 
@@ -86,33 +97,55 @@ def train(
     eval_interval: int = 1,
     device: torch.device = torch.device('cpu'),
     lr_scheduler: Optional[_LRScheduler] = None,
+    metrics: Optional[Union[List[Metric], MetricCollection]] = None,
     callbacks: Optional[Union[List[Callback], CallbackList]] = None
 ):
-    model.to(device)
+    """_summary_
 
+    Args:
+        model (_type_): _description_
+        trainloader (DataLoader): _description_
+        optimizer (Optimizer): _description_
+        criterion (Callable): _description_
+        epochs (int): _description_
+        evalloader (Optional[DataLoader], optional): _description_. Defaults to None.
+        eval_interval (int, optional): _description_. Defaults to 1.
+        device (torch.device, optional): _description_. Defaults to torch.device('cpu').
+        lr_scheduler (Optional[_LRScheduler], optional): _description_. Defaults to None.
+        metrics (Optional[Union[List[Metric], MetricCollection]], optional): _description_. Defaults to None.
+        callbacks (Optional[Union[List[Callback], CallbackList]], optional): _description_. Defaults to None.
+
+    Returns:
+        _type_: _description_
+    """
+    # Process callables
+    metrics = _process_metrics(metrics)
     callbacks = _process_callbacks(callbacks, model)
 
-    callbacks.on_train_begin(run_logs)
+    model.to(device)
+    metrics.to(device)
+
+    callbacks.on_train_begin(None)
 
     for epoch in range(1, epochs + 1):
 
         callbacks.on_epoch_begin(epoch)
 
         # train
-        train_logs = train_one_epoch(
-            model, trainloader, optimizer, criterion, device, lr_scheduler, callbacks
+        _logs = train_one_epoch(
+            model, trainloader, optimizer, criterion, device, lr_scheduler, metrics,
+            callbacks
         )
-        epoch_logs.update({'train_' + k: v for k, v in train_logs.items()})
 
         if evalloader and epoch % eval_interval == 0:
             # TODO
             pass
 
-        callbacks.on_epoch_end(epoch, epoch_logs)
+        callbacks.on_epoch_end(epoch, _logs)
 
         if callbacks.stop_training:
             break
 
-    callbacks.on_train_end(run_logs)
+    callbacks.on_train_end(_logs)
 
-    return run_logs
+    return _logs
