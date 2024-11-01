@@ -7,31 +7,50 @@ MODEL:
     output_size: 32
     #----
 
+TRAINING:
+  Loss:
+    - name: CrossEntropyLoss
+      weight: 1.0  # TODO: change to str - weird error - fix
+      kwargs:
+    # ...
+  Optimizer:
+    name: Adam                  # any from torch.optim
+    kwargs:
+      #----
+      lr: 0.001
+      weight_decay: 0.00001
+      #----
+
 
 METRICS:
   Train:
     #----
-    Accuracy:
-      task: multiclass
-      num_classes: 4
+    - name: Accuracy
+      kwargs:
+        task: multiclass
+        num_classes: 4
     #----
   Validation:
     #----
-    Accuracy:
-      task: multiclass
-      num_classes: 4
-    F1Score:
-      task: multiclass
-      num_classes: 4
-      average: weighted
+    - name: Accuracy
+      kwargs:
+        task: multiclass
+        num_classes: 4
+    - name: F1Score
+      kwargs:
+        task: multiclass
+        num_classes: 4
+        average: weighted
     #----
   Test:
     #----
-    Accuracy:
-      task: multiclass
-      num_classes: 4
-    F1Score:
-      task: multiclass
-      num_classes: 4
-      average: weighted
+    - name: Accuracy
+      kwargs:
+        task: multiclass
+        num_classes: 4
+    - name: F1Score
+      kwargs:
+        task: multiclass
+        num_classes: 4
+        average: weighted
     #----

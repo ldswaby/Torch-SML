@@ -1,15 +1,18 @@
-import sys
 from typing import Dict, List, Optional
 
 import yaml
-from cerberus import Validator, errors
+from cerberus import Validator
 from torch import optim
 
 from AML.models import MODEL_REGISTRY
+from AML.metrics import METRIC_REGISTRY
+from AML.loss import LOSS_REGISTRY
 from AML.utils import fetch_pkg_subclasses
 
 # Optional vars
 model_opts = MODEL_REGISTRY.list_keys()
+loss_opts = LOSS_REGISTRY.list_keys()
+metric_opts = METRIC_REGISTRY.list_keys()
 optimizer_opts = fetch_pkg_subclasses(optim, optim.Optimizer).keys()
 device_opts = ['cpu', 'cuda', 'mps']
 
@@ -29,34 +32,62 @@ KWARGS_DICT = {
     'default': {}
 }
 
+
+
 NATURAL_NUMBER = INT | {'min': 1}
 WHOLE_NUMBER = INT | {'min': 0}
 POSITIVE_REAL = FLOAT | {'min': 0.0}
+REQUIRED = {'required': True}
 
 
 def RANGE(min, max): return {'min': min, 'max': max}
 def OPTIONS(opts): return {'allowed': opts}
+def DEFAULT(value): return {'default': value}
+
+def LIST_WITH_KWARGS(opts, **kwargs):
+    return LIST | {
+        'schema': {
+            'type': 'dict',
+            'schema': {
+                'name': STR | OPTIONS(opts),
+                **kwargs,
+                'kwargs': KWARGS_DICT,
+
+            }
+        },
+    }
 
 
 SCHEMA = {
     'MODEL': {
         'type': 'dict',
         'schema': {
-            'name': OPTIONS(model_opts),
+            'name': STR | OPTIONS(model_opts),
             'kwargs': KWARGS_DICT
+        },
+    },
+    'TRAINING': {
+        'type': 'dict',
+        'schema': {
+            'Loss': LIST_WITH_KWARGS(loss_opts, weight=FLOAT),
+            'Optimizer': {
+                'type': 'dict',
+                'schema': {
+                    'name': STR | OPTIONS(optimizer_opts),
+                    'kwargs': KWARGS_DICT
+                }
+            }
         },
     },
     'METRICS': {
         'type': 'dict',
         'schema': {
-            'Train': KWARGS_DICT,
-            'Test': KWARGS_DICT,
-            'Validation': KWARGS_DICT,
+            'Train': LIST_WITH_KWARGS(metric_opts),
+            'Test': LIST_WITH_KWARGS(metric_opts),
+            'Validation': LIST_WITH_KWARGS(metric_opts),
         }
     }
-
 }
-
 
 class Config(dict):
 
@@ -99,6 +130,8 @@ class Config(dict):
         """
         errs = []
         v = Validator(SCHEMA)
+
+        breakpoint()
 
         if not v.validate(self):
             errs.extend(self._format_errors(v.errors))

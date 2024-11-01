@@ -1,7 +1,7 @@
 from trainers.trainer import Trainer
 from optimizers.custom_optimizer import CustomOptimizer
 from models.custom_model import CustomModel
-from losses.custom_loss import CustomLoss
+from AML.loss.loss import CustomLoss
 from callbacks.custom_callback import CustomCallback
 from data.datasets import CustomDataset
 import yaml

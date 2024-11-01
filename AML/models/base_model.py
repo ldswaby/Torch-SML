@@ -10,6 +10,6 @@ class BaseModel(nn.Module):
         """Define the model layers."""
         raise NotImplementedError("Subclasses should implement this method.")
 
-    def forward(self, x):
+    def forward(self, x) -> dict:
         """Forward pass logic."""
         raise NotImplementedError("Subclasses should implement this method.")

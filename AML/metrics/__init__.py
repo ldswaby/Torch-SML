@@ -8,18 +8,16 @@ from torchmetrics import classification, regression, detection, functional, imag
 from ..utils.registry import Registry
 METRIC_REGISTRY = Registry('Metric')
 
-from . import utils
-# from .metrics import *
 from . import metrics
 
 modules = [
-    metrics,
     torchmetrics,
     classification,
     regression,
     detection,
     functional,
-    image
+    image,
+    metrics  # Register any additional custom metrics modules here
 ]
 
 # Register torchmetrics

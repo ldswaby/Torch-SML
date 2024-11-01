@@ -1,7 +1,8 @@
-from losses.base_loss import BaseLoss
+from AML.loss import Module
+
 import torch.nn.functional as F
 
-class CustomLoss(BaseLoss):
+class CustomLoss(Module):
     def forward(self, outputs, targets):
         loss = F.cross_entropy(outputs, targets)
         return loss

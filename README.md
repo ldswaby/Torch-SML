@@ -15,8 +15,17 @@ Repo for ML
   * Certain metrics will only be compatible with some of these outputs
 
 
-  # Models
+# Models
   * Ouputs have to be of the format taken by classification metrics (e.g. for classification model using multiclass accuracy, outputs should be e.g. [2,1,2,1,0])
   * Models forward should output a dict, with keys:
     * `'outputs'`: Whatever format required by loss/metrics
     * `'logits'`: Unprocessed final layer outputs
+
+
+# Loss
+* preds can be logits for both loss and metrics
+* In the train loop, loss fn inputs can be iteratively built up tp allow loss fns that take 2 or 3 inputs, as https://github.com/adambielski/siamese-triplet/blob/master/trainer.py#L65
+
+
+
+Data (batches) => Model (logits/embeddings) => Loss/Metrics
