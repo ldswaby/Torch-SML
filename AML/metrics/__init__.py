@@ -51,8 +51,8 @@ def _build_metrics(config: dict) -> dict:
 
     for dset, _mtrcs in config['METRICS'].items():
         dset_mtrcs = []
-        for name, kwargs in _mtrcs.items():
-            dset_mtrcs.append(METRIC_REGISTRY.get(name)(**kwargs))
+        for _m in _mtrcs:
+            dset_mtrcs.append(METRIC_REGISTRY.get(_m['name'])(**_m['kwargs']))
         metrics[dset] = MetricCollection(dset_mtrcs, prefix=f'{dset}/')
 
     return metrics

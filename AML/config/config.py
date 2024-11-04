@@ -131,8 +131,6 @@ class Config(dict):
         errs = []
         v = Validator(SCHEMA)
 
-        breakpoint()
-
         if not v.validate(self):
             errs.extend(self._format_errors(v.errors))
 
