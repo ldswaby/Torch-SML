@@ -1,1 +1,1 @@
-from .config import Config, SCHEMA
+from .config import Config

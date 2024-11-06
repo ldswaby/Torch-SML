@@ -1,16 +1,15 @@
 MODEL:
-  name: MyCustomModel
+  name: wide_resnet50_2
   kwargs:
     #----
-    input_size: 32
-    hidden_size: 32
-    output_size: 32
+    num_classes: 4
     #----
 
 TRAINING:
   Loss:
     - name: CrossEntropyLoss
       weight: 1.0  # TODO: change to str - weird error - fix
+      # input: logits  # TODO: to detrmine which model outputs loss takes
       kwargs:
     # ...
   Optimizer:

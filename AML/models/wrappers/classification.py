@@ -1,10 +1,11 @@
-from typing import Dict, Optional
+from typing import Dict
 
 import torch
 import torch.nn as nn
 
 
 class ClassificationModel(nn.Module):
+
     def __init__(self, model: nn.Module):
         super().__init__()
         layers = list(model.children())
@@ -20,23 +21,19 @@ class ClassificationModel(nn.Module):
         Returns:
             Dict[str, torch.Tensor]: _description_
         """
+        out = {}
 
         # Generate embeddings
-        embeddings = self.feature_extractor(x).flatten(1)
+        out['embeddings'] = self.feature_extractor(x).flatten(1)
 
         # Get logits
-        logits = self.classifier(embeddings)
+        out['logits'] = self.classifier(out['embeddings'])
 
-        # Compute probabilities and predictions
-        probs = torch.softmax(logits, dim=1)
-        preds = torch.argmax(probs, dim=1)
+        # Compute probabilities and predicted class labels
+        out['probs'] = torch.softmax(out['logits'], dim=1)
+        out['preds'] = torch.argmax(out['probs'], dim=1)
 
-        return {
-            "embeddings": embeddings,  # Raw embeddings before final layer
-            "logits": logits,           # Logits for classification
-            "probs": probs,             # Probabilities for each class
-            "preds": preds              # Predicted class labels
-        }
+        return out
 
 
 # import torch

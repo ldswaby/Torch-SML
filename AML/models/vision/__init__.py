@@ -1,3 +1,4 @@
+from torchvision.models import list_models
 from .. import MODEL_REGISTRY
 from torchvision.models import *
 

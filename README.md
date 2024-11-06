@@ -28,4 +28,10 @@ Repo for ML
 
 
 
+
+
+## Problem
+
+* Data outputs need to be in format required by training loop/model
+
 Data (batches) => Model (logits/embeddings) => Loss/Metrics

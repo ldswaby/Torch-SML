@@ -2,10 +2,11 @@ from torch import nn
 from torch.nn import Module
 
 from ..utils.registry import Registry
+from . import loss  # Import your own custom loss functions, if any
+from .CompositeLoss import CompositeLoss
+
 LOSS_REGISTRY = Registry('Loss')
 
-from .CompositeLoss import CompositeLoss
-from . import loss  # Import your own custom loss functions, if any
 
 # List of modules containing loss functions
 modules = [
@@ -26,6 +27,27 @@ for module in modules:
             except KeyError:
                 # Loss function already registered, skip
                 continue
+
+
+def _build_loss(config: dict) -> CompositeLoss:
+    """Returns CompositeLoss object
+
+    Args:
+        config (dict): _description_
+
+    Returns:
+        dict: _description_
+    """
+    loss_fns = []
+    weights = []
+
+    for loss_cfg in config['TRAINING']['Loss']:
+        loss_fn = LOSS_REGISTRY.get(loss_cfg['name'])(**loss_cfg['kwargs'])
+        w = loss_cfg['weight']
+        loss_fns.append(loss_fn)
+        weights.append(w)
+
+    return CompositeLoss(loss_fns, weights)
 
 # Cleanup namespace
 del module, modules, attr, attr_name, nn
