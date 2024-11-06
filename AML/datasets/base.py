@@ -47,3 +47,11 @@ class BaseDataset(Dataset, ABC):
         Returns:
             torch.Tensor: The target corresponding to the data sample as a PyTorch tensor.
         """
+
+    @property
+    def in_shape(self):
+        return self[0]['data'].shape
+
+    @property
+    def num_classes(self):
+        return len(set(x['target'].item() for x in self))

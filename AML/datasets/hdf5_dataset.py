@@ -1,9 +1,10 @@
 import h5py
 import torch
 
-from AML.datasets import BaseDataset
+from AML.datasets import DATASET_REGISTRY, BaseDataset
 
 
+@DATASET_REGISTRY.register('HDF5Dataset')
 class HDF5Dataset(BaseDataset):
     """Dataset for loading data and targets from an HDF5 file.
 

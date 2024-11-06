@@ -4,12 +4,14 @@ import yaml
 from cerberus import Validator
 from torch import optim
 
-from AML.models import MODEL_REGISTRY
-from AML.metrics import METRIC_REGISTRY
+from AML.datasets import DATASET_REGISTRY
 from AML.loss import LOSS_REGISTRY
+from AML.metrics import METRIC_REGISTRY
+from AML.models import MODEL_REGISTRY
 from AML.utils import fetch_pkg_subclasses
 
 # Optional vars
+dataset_opts = DATASET_REGISTRY.list_keys()
 model_opts = MODEL_REGISTRY.list_keys()
 loss_opts = LOSS_REGISTRY.list_keys()
 metric_opts = METRIC_REGISTRY.list_keys()
@@ -33,7 +35,6 @@ KWARGS_DICT = {
 }
 
 
-
 NATURAL_NUMBER = INT | {'min': 1}
 WHOLE_NUMBER = INT | {'min': 0}
 POSITIVE_REAL = FLOAT | {'min': 0.0}
@@ -43,6 +44,7 @@ REQUIRED = {'required': True}
 def RANGE(min, max): return {'min': min, 'max': max}
 def OPTIONS(opts): return {'allowed': opts}
 def DEFAULT(value): return {'default': value}
+
 
 def LIST_WITH_KWARGS(opts, **kwargs):
     return LIST | {
@@ -59,6 +61,13 @@ def LIST_WITH_KWARGS(opts, **kwargs):
 
 
 SCHEMA = {
+    'DATASET': {
+        'type': 'dict',
+        'schema': {
+            'name': STR | OPTIONS(dataset_opts),
+            'kwargs': KWARGS_DICT
+        },
+    },
     'MODEL': {
         'type': 'dict',
         'schema': {
@@ -88,6 +97,7 @@ SCHEMA = {
         }
     }
 }
+
 
 class Config(dict):
 

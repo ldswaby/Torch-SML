@@ -3,9 +3,10 @@ import os
 import numpy as np
 import torch
 
-from AML.datasets import BaseDataset
+from AML.datasets import DATASET_REGISTRY, BaseDataset
 
 
+@DATASET_REGISTRY.register('NumpyDataset')
 class NumpyDataset(BaseDataset):
     """Dataset for loading data and targets from NumPy files.
 

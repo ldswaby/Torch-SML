@@ -3,9 +3,10 @@ from typing import List
 import pandas as pd
 import torch
 
-from AML.datasets import BaseDataset
+from AML.datasets import DATASET_REGISTRY, BaseDataset
 
 
+@DATASET_REGISTRY.register('PandasDataset')
 class PandasDataset(BaseDataset):
     """Dataset for loading data and targets from a pandas DataFrame.
 

@@ -1,3 +1,8 @@
+DATASET:
+  name: NumpyDataset
+  kwargs:
+    root: /Users/lukeswaby/Desktop/CODING/AML/data
+
 MODEL:
   name: wide_resnet50_2
   kwargs:
@@ -19,7 +24,6 @@ TRAINING:
       lr: 0.001
       weight_decay: 0.00001
       #----
-
 
 METRICS:
   Train:

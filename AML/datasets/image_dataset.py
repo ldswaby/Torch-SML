@@ -4,9 +4,10 @@ from typing import Callable, List, Optional, Tuple
 import torch
 from PIL import Image
 
-from AML.datasets import BaseDataset
+from AML.datasets import DATASET_REGISTRY, BaseDataset
 
 
+@DATASET_REGISTRY.register('ImageDataset')
 class ImageDataset(BaseDataset):
     """Dataset for loading images and targets from directories.
 
