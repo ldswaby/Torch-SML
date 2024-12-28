@@ -1,8 +1,9 @@
 import warnings
 
-from AML.callbacks import Callback
+from AML.callbacks import Callback, CALLBACK_REGISTRY
 
 
+@CALLBACK_REGISTRY.register()
 class FileOutput(Callback):
     """Abstract class for callbacks that generate files"""
 

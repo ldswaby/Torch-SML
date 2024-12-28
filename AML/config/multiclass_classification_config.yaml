@@ -2,6 +2,12 @@ DATASET:
   name: NumpyDataset
   kwargs:
     root: /Users/lukeswaby/Desktop/CODING/AML/data
+  split_method:
+    name: holdout
+    kwargs:
+      train_ratio: 0.7
+      val_ratio: 0.15  # Can be 0
+      test_ratio: 0.15  # Can be 0
 
 MODEL:
   name: wide_resnet50_2
@@ -11,6 +17,7 @@ MODEL:
     #----
 
 TRAINING:
+  batch_size: 32
   Loss:
     - name: CrossEntropyLoss
       weight: 1.0  # TODO: change to str - weird error - fix
@@ -57,3 +64,11 @@ METRICS:
         num_classes: 4
         average: weighted
     #----
+
+CALLBACKS:
+  - name: Monitor
+    kwargs:
+      monitor: # TODO
+      mode: min
+      delta: 0
+      verbose: True

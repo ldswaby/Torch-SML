@@ -3,9 +3,10 @@ from typing import Optional
 
 import torch
 
-from AML.callbacks import Callback
+from AML.callbacks import Callback, CALLBACK_REGISTRY
 
 
+@CALLBACK_REGISTRY.register()
 class Monitor(Callback):
     """Abstract class for tracking a particular metric"""
 

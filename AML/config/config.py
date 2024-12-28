@@ -8,14 +8,18 @@ from AML.datasets import DATASET_REGISTRY
 from AML.loss import LOSS_REGISTRY
 from AML.metrics import METRIC_REGISTRY
 from AML.models import MODEL_REGISTRY
+from AML.callbacks import CALLBACK_REGISTRY
 from AML.utils import fetch_pkg_subclasses
+from AML.utils.data.splitters import DATA_SPLITTER_REGISTRY
 
 # Optional vars
 dataset_opts = DATASET_REGISTRY.list_keys()
 model_opts = MODEL_REGISTRY.list_keys()
 loss_opts = LOSS_REGISTRY.list_keys()
 metric_opts = METRIC_REGISTRY.list_keys()
-optimizer_opts = fetch_pkg_subclasses(optim, optim.Optimizer).keys()
+callback_opts = CALLBACK_REGISTRY.list_keys()
+optimizer_opts = list(fetch_pkg_subclasses(optim, optim.Optimizer).keys())
+data_splitter_opts = DATA_SPLITTER_REGISTRY.list_keys()
 device_opts = ['cpu', 'cuda', 'mps']
 
 # Arg checks
@@ -65,7 +69,14 @@ SCHEMA = {
         'type': 'dict',
         'schema': {
             'name': STR | OPTIONS(dataset_opts),
-            'kwargs': KWARGS_DICT
+            'kwargs': KWARGS_DICT,
+            'split_method': {
+                'type': 'dict',
+                'schema': {
+                    'name': STR | OPTIONS(data_splitter_opts),
+                    'kwargs': KWARGS_DICT
+                }
+            }
         },
     },
     'MODEL': {
@@ -78,6 +89,7 @@ SCHEMA = {
     'TRAINING': {
         'type': 'dict',
         'schema': {
+            'batch_size': INT,
             'Loss': LIST_WITH_KWARGS(loss_opts, weight=FLOAT),
             'Optimizer': {
                 'type': 'dict',
@@ -95,7 +107,8 @@ SCHEMA = {
             'Test': LIST_WITH_KWARGS(metric_opts),
             'Validation': LIST_WITH_KWARGS(metric_opts),
         }
-    }
+    },
+    'CALLBACKS': LIST_WITH_KWARGS(callback_opts)
 }
 
 

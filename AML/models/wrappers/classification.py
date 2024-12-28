@@ -5,7 +5,8 @@ import torch.nn as nn
 
 
 class ClassificationModel(nn.Module):
-
+    """_summary_
+    """
     def __init__(self, model: nn.Module):
         super().__init__()
         layers = list(model.children())
