@@ -6,12 +6,12 @@ from torch import nn
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader
-from tqdm import tqdm
+# from tqdm import tqdm
 
 from AML.callbacks import Callback, CallbackList
 from AML.callbacks.utils import _process_callbacks
 from AML.metrics import Metric, MetricCollection
-from AML.metrics.utils import _process_metrics
+from AML.metrics import _process_metrics
 
 
 def train_one_epoch(

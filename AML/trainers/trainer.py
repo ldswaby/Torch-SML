@@ -29,9 +29,7 @@ class Trainer:
         Returns:
             _type_: _description_
         """
-        dataset = _build_dataset(self.config)
-        splitter = _data_splitter_factory(self.config)
-        return splitter.split(dataset)
+        return _build_dataset(self.config)
 
     def _build_model(self):
         return _build_model(self.config)

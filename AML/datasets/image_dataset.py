@@ -2,6 +2,7 @@ import os
 from typing import Callable, List, Optional, Tuple
 
 import torch
+import numpy as np
 from PIL import Image
 
 from AML.datasets import DATASET_REGISTRY, BaseDataset
@@ -28,8 +29,9 @@ class ImageDataset(BaseDataset):
             d for d in os.listdir(root)
             if os.path.isdir(os.path.join(root, d))
         ])
-        self.class_to_idx = {cls_name: idx for idx,
-                             cls_name in enumerate(self.classes)}
+        self.class_to_idx = {
+            cls_name: idx for idx, cls_name in enumerate(self.classes)
+        }
         self.samples: List[Tuple[str, int]] = []
 
         for cls_name in self.classes:
@@ -49,8 +51,9 @@ class ImageDataset(BaseDataset):
             image = self.transform(image)
         else:
             # Convert to tensor if no transform is provided
-            image = torch.from_numpy(np.array(image)).permute(
-                2, 0, 1).float() / 255.0
+            image = torch.from_numpy(
+                np.array(image)
+            ).permute(2, 0, 1).float() / 255.0
         return image
 
     def get_target(self, idx: int) -> torch.Tensor:

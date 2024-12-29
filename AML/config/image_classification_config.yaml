@@ -1,0 +1,75 @@
+DATASET:
+  name: FashionMNIST
+  kwargs:
+    root: /Users/lukeswaby/Desktop/CODING/AML/data/fmnist
+    download: True
+  split_method:
+    name: holdout
+    kwargs:
+      train_ratio: 0.7
+      val_ratio: 0.15  # Can be 0
+      test_ratio: 0.15  # Can be 0
+
+MODEL:
+  name: wide_resnet50_2
+  kwargs:
+    #----
+    num_classes: 4
+    #----
+
+TRAINING:
+  batch_size: 32
+  Loss:
+    - name: CrossEntropyLoss
+      weight: 1.0  # TODO: change to str - weird error - fix
+      # input: logits  # TODO: to detrmine which model outputs loss takes
+      kwargs:
+    # ...
+  Optimizer:
+    name: Adam                  # any from torch.optim
+    kwargs:
+      #----
+      lr: 0.001
+      weight_decay: 0.00001
+      #----
+
+METRICS:
+  Train:
+    #----
+    - name: Accuracy
+      kwargs:
+        task: multiclass
+        num_classes: 4
+    #----
+  Validation:
+    #----
+    - name: Accuracy
+      kwargs:
+        task: multiclass
+        num_classes: 4
+    - name: F1Score
+      kwargs:
+        task: multiclass
+        num_classes: 4
+        average: weighted
+    #----
+  Test:
+    #----
+    - name: Accuracy
+      kwargs:
+        task: multiclass
+        num_classes: 4
+    - name: F1Score
+      kwargs:
+        task: multiclass
+        num_classes: 4
+        average: weighted
+    #----
+
+CALLBACKS:
+  - name: Monitor
+    kwargs:
+      monitor: # TODO
+      mode: min
+      delta: 0
+      verbose: True
