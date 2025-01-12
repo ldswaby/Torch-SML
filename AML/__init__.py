@@ -5,7 +5,7 @@ from AML.models import MODEL_REGISTRY
 from AML.callbacks import CALLBACK_REGISTRY
 from AML.utils.data.splitters import DATA_SPLITTER_REGISTRY
 
-register = {
+library = {
     'datasets': DATASET_REGISTRY.list_keys(),
     'data_splitters': DATA_SPLITTER_REGISTRY.list_keys(),
     'losses': LOSS_REGISTRY.list_keys(),

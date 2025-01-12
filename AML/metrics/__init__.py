@@ -1,14 +1,15 @@
 import warnings
-from typing import Optional, Union, List
+from typing import List, Optional, Union
 
 import torchmetrics
-from torchmetrics import Metric, MetricCollection
-from torchmetrics import classification, regression, detection, functional, image
+from torchmetrics import (Metric, MetricCollection, classification, detection,
+                          functional, image, regression)
 
 from ..utils.registry import Registry
 METRIC_REGISTRY = Registry('Metric')
 
 from . import metrics
+
 
 modules = [
     torchmetrics,
@@ -50,6 +51,7 @@ def _build_metrics(config: dict) -> dict:
     metrics = {}
 
     for dset, _mtrcs in config['METRICS'].items():
+        dset = dset.lower()
         dset_mtrcs = []
         for _m in _mtrcs:
             dset_mtrcs.append(METRIC_REGISTRY.get(_m['name'])(**_m['kwargs']))
@@ -71,6 +73,7 @@ def _process_metrics(metrics: Optional[Union[List[Metric], MetricCollection]] = 
     if not isinstance(metrics, MetricCollection):
         metrics = MetricCollection(metrics)
     return metrics
+
 
 # Namespace cleanup
 del warnings

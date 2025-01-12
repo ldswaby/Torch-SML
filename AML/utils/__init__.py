@@ -1,3 +1,2 @@
-from . import registry
-from . import data
+from . import data, registry, training
 from .utils import *

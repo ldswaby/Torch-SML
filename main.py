@@ -13,6 +13,12 @@ trainer = Trainer(cfg)
 
 breakpoint()
 
-train_metrics = metrics['Train']
-val_metrics = metrics['Validation']
-test_metrics = metrics['Test']
+if __name__ == '__main__':
+    # Necessary for multiprocessing on macOS and Windows
+
+    # TODO: add tranasform option for datasets
+    trainer.train_one_epoch()
+
+# train_metrics = metrics['Train']
+# val_metrics = metrics['Validation']
+# test_metrics = metrics['Test']

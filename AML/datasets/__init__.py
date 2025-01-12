@@ -1,24 +1,27 @@
 import inspect
 from typing import Dict
+
+import torch
 from torch.utils.data import DataLoader, Dataset
 
 from ..utils.registry import Registry
+from ..utils import set_num_workers
+
 DATASET_REGISTRY = Registry('Dataset')
 
-from ..utils.data.splitters import _data_splitter_factory
+import inspect
+from typing import Dict
 
+from ..utils.data.splitters import _data_splitter_factory
+from . import vision
 from .base import BaseDataset
 from .csv_dataset import CSVDataset
 # from .hdf5_dataset import HDF5Dataset
 # from .image_dataset import ImageDataset
 from .numpy_dataset import NumpyDataset
 from .pandas_dataset import PandasDataset
-from . import vision
 from .torch_dataset_wrapper import TorchDatasetWrapper
 
-
-import inspect
-from typing import Dict
 
 def _build_dataset(config: dict) -> Dict[str, Dataset]:
     """
@@ -109,8 +112,9 @@ def _build_dataset(config: dict) -> Dict[str, Dataset]:
     return datasets
 
 
-
-def _build_dataloaders(config: dict, dataset: BaseDataset) -> Dict[str, DataLoader]:
+def _build_dataloaders(
+        config: dict, datasets: Dict[str, Dataset], device: torch.device
+    ) -> Dict[str, DataLoader]:
     """Builds train/validation/test dataloaders
 
     Args:
@@ -120,5 +124,13 @@ def _build_dataloaders(config: dict, dataset: BaseDataset) -> Dict[str, DataLoad
     Returns:
         DataLoader: _description_
     """
-    # TODO
-    pass
+    num_workers = set_num_workers(device)
+    dataloaders = {}
+    for split_name, dset in datasets.items():
+        dataloaders[split_name] = DataLoader(
+            dset,
+            batch_size=config['TRAINING']['batch_size'],
+            shuffle=(split_name == 'train'),
+            num_workers=num_workers
+        )
+    return dataloaders

@@ -14,7 +14,7 @@ MODEL:
   name: wide_resnet50_2
   kwargs:
     #----
-    num_classes: 4
+    num_classes: 4  # TOOD: inherit from dataset?
     #----
 
 TRAINING:

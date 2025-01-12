@@ -1,4 +1,3 @@
-
 from typing import Callable, List, Optional, Union
 
 import torch
@@ -6,40 +5,40 @@ from torch import nn
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader
-# from tqdm import tqdm
 
 from AML.callbacks import Callback, CallbackList
 from AML.callbacks.utils import _process_callbacks
-from AML.metrics import Metric, MetricCollection
-from AML.metrics import _process_metrics
+from AML.metrics import Metric, MetricCollection, _process_metrics
+from AML.utils.training import TrainingProgressBar
 
 
 def train_one_epoch(
-    model,
+    model: nn.Module,
     trainloader: DataLoader,
     optimizer: Optimizer,
     criterion: Callable,
     device: torch.device = torch.device('cpu'),
     lr_scheduler: Optional[_LRScheduler] = None,
     metrics: Optional[Union[List[Metric], MetricCollection]] = None,
-    callbacks: Optional[Union[List[Callback], CallbackList]] = None
+    callbacks: Optional[Union[List[Callback], CallbackList]] = None,
+    pbar: Optional[TrainingProgressBar] = None,
 ):
-    """_summary_
+    """Train a model for one epoch over the given DataLoader.
 
     Args:
-        model (_type_): _description_
-        trainloader (DataLoader): _description_
-        optimizer (Optimizer): _description_
-        criterion (Callable): _description_
-        device (torch.device, optional): _description_. Defaults to torch.device('cpu').
-        lr_scheduler (Optional[_LRScheduler], optional): _description_. Defaults to None.
-        metrics (Optional[Metric], optional): _description_. Defaults to None.
-        callbacks (Optional[Union[List[Callback], CallbackList]], optional): _description_. Defaults to None.
+        model (nn.Module): The model to train.
+        trainloader (DataLoader): The DataLoader for training data.
+        optimizer (Optimizer): The optimizer to update model parameters.
+        criterion (Callable): A callable for computing loss.
+        device (torch.device, optional): The device to run on. Defaults to CPU.
+        lr_scheduler (Optional[_LRScheduler], optional): A learning rate scheduler. Defaults to None.
+        metrics (Optional[Union[List[Metric], MetricCollection]], optional): Metrics to compute. Defaults to None.
+        callbacks (Optional[Union[List[Callback], CallbackList]], optional): Callback objects. Defaults to None.
+        pbar (Optional[TrainingProgressBar]): The progress bar object, if any.
 
     Returns:
-        _type_: _description_
+        dict: Dictionary of computed metrics or logs (e.g. {'loss': ..., 'acc': ...}).
     """
-    # Process callables
     metrics = _process_metrics(metrics)
     callbacks = _process_callbacks(callbacks, model)
 
@@ -48,43 +47,52 @@ def train_one_epoch(
     metrics.reset()
     metrics.to(device)
 
-    # batch loop
-    with tqdm(trainloader, unit=' batch', colour='green') as bepoch:
+    # Start the batch-level progress bar
+    if pbar is not None:
+        pbar.start_batch(total_batches=len(trainloader))
 
-        for batch in bepoch:
+    for _, batch in enumerate(trainloader):
+        # Move data onto device
+        inputs = batch['inputs'].to(device)
+        targets = batch['targets'].to(device)
 
-            # if epoch_desciption:
-            #     bepoch.set_description(epoch_desciption)
+        callbacks.on_train_batch_begin(batch)
 
-            # data onto device
-            inputs = batch['inputs'].to(device)
-            targets = batch['targets'].to(device)
+        # Forward pass
+        outputs = model(inputs)
+        loss = criterion(outputs, targets)
 
-            callbacks.on_train_batch_begin(batch)
+        # Backward pass
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
 
-            # forward pass
-            outputs = model(inputs)
-            # compute loss
-            # TODO: This needs to be modified to reflect however
-            # our loss library ends up working. E.g. will it also accept
-            # embeddings?
-            loss = criterion(outputs, targets)
+        # Update metrics
+        metrics.update(outputs, targets)
 
-            # backward pass and update weights
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+        # Optional: Step LR scheduler
+        if lr_scheduler is not None:
+            lr_scheduler.step()
 
-            # Scheduler step
-            if lr_scheduler:
-                lr_scheduler.step()
+        # Gather logs to pass to the callback
+        batch_logs = {
+            'loss': loss.item(),
+            # You can add more metrics here if needed
+        }
 
-            callbacks.on_train_batch_end(batch, batch_logs)
+        callbacks.on_train_batch_end(batch, batch_logs)
 
-            # informative output
-            bepoch.set_postfix({'Loss': float, 'Acc': float})
+        # Update the batch progress bar (showing loss, for instance)
+        if pbar is not None:
+            pbar.update_batch(loss=loss.item())
 
-    return {'loss': epoch_loss.value, 'acc': epoch_acc.value}
+    # End the batch-level progress bar
+    if pbar is not None:
+        pbar.end_batch()
+
+    # Gather final epoch logs from metrics
+    epoch_logs = {m.name: m.value for m in metrics.values()}
+    return epoch_logs
 
 
 def train(
