@@ -22,6 +22,7 @@ class CompositeLoss(nn.Module):
         weights: Optional[List[float]] = None,
     ):
         super().__init__()
+        self._device = None
         self.losses = nn.ModuleList(losses)
         if weights is None:
             # Assign equal weight to all losses
@@ -32,6 +33,20 @@ class CompositeLoss(nn.Module):
                     "The number of weights must match the number of losses."
                 )
             self.weights = weights
+
+    @property
+    def device(self):
+        """Returns device
+        """
+        return self._device
+
+    def set_device(self, device: str | torch.device):
+        """Set the device attribute and move all parameters/buffers to it.
+        """
+        if not isinstance(device, torch.device):
+            device = torch.device(device)
+        self._device = device
+        self.to(device)  # Move module parameters to the device
 
     def forward(self, outputs: torch.Tensor, targets: torch.Tensor) -> Dict[str, torch.Tensor]:
         """
@@ -45,9 +60,12 @@ class CompositeLoss(nn.Module):
             Dict[str, torch.Tensor]: A dictionary containing individual losses and the total loss.
         """
         losses_dict = {}
-        total_loss = torch.tensor(0.0, device=outputs.device)
+        total_loss = torch.tensor(0.0, device=self.device)
         for loss_fn, weight in zip(self.losses, self.weights):
-            loss_value = loss_fn(outputs, targets) * weight
+            # TODO: write some logic to decide which outputs go into which loss
+            # function in which order (i.e. 'embeddings', 'logits', 'probs', 'preds').
+            # Currently just assumes logits, like CELoss
+            loss_value = loss_fn(outputs['logits'], targets) * weight
             loss_name = loss_fn.__class__.__name__
             losses_dict[loss_name] = loss_value
             total_loss += loss_value

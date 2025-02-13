@@ -96,6 +96,8 @@ SCHEMA = {
     'TRAINING': {
         'type': 'dict',
         'schema': {
+            'epochs': INT,
+            'eval_interval': INT,
             'batch_size': INT,
             'Loss': LIST_WITH_KWARGS(loss_opts, weight=FLOAT),
             'Optimizer': {

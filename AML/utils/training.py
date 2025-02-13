@@ -62,7 +62,7 @@ class TrainingProgressBar:
 
         # Create the main epoch task.
         self.epoch_task_id = self.progress.add_task(
-            "[cyan]Training Epochs",
+            "[cyan]Epochs",
             total=self.total_epochs,
             extra=""
         )

@@ -11,6 +11,9 @@ DATASET:
       test_ratio: 0.15  # Can be 0
 
 TRANSFORMS:
+  - name: Grayscale
+    kwargs:
+      num_output_channels: 3
   - name: ToTensor
     kwargs:
   - name: Normalize
@@ -19,13 +22,15 @@ TRANSFORMS:
       std: [0.5]
 
 MODEL:
-  name: wide_resnet50_2
+  name: resnet18
   kwargs:
     #----
-    num_classes: 4  # TOOD: inherit from dataset?
+    num_classes: 10  # TOOD: inherit from dataset?
     #----
 
 TRAINING:
+  epochs: 100
+  eval_interval: 5
   batch_size: 32
   Loss:
     - name: CrossEntropyLoss
@@ -47,18 +52,18 @@ METRICS:
     - name: Accuracy
       kwargs:
         task: multiclass
-        num_classes: 4
+        num_classes: 10
     #----
   Validation:
     #----
     - name: Accuracy
       kwargs:
         task: multiclass
-        num_classes: 4
+        num_classes: 10
     - name: F1Score
       kwargs:
         task: multiclass
-        num_classes: 4
+        num_classes: 10
         average: weighted
     #----
   Test:
@@ -66,11 +71,11 @@ METRICS:
     - name: Accuracy
       kwargs:
         task: multiclass
-        num_classes: 4
+        num_classes: 10
     - name: F1Score
       kwargs:
         task: multiclass
-        num_classes: 4
+        num_classes: 10
         average: weighted
     #----
 

@@ -1,4 +1,5 @@
 from typing import Callable, List, Optional, Union
+from contextlib import nullcontext
 
 import torch
 from torch import nn
@@ -44,54 +45,64 @@ def train_one_epoch(
 
     model.to(device)
     model.train()
+    criterion.set_device(device)
     metrics.reset()
     metrics.to(device)
 
-    # Start the batch-level progress bar
-    if pbar is not None:
-        pbar.start_batch(total_batches=len(trainloader))
+    with pbar if pbar is not None else nullcontext():
 
-    for _, batch in enumerate(trainloader):
-        # Move data onto device
-        inputs = batch['data'].to(device)
-        targets = batch['target'].to(device)
-
-        callbacks.on_train_batch_begin(batch)
-
-        # Forward pass
-        outputs = model(inputs)
-        loss = criterion(outputs, targets)
-
-        # Backward pass
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-
-        # Update metrics
-        metrics.update(outputs, targets)
-
-        # Optional: Step LR scheduler
-        if lr_scheduler is not None:
-            lr_scheduler.step()
-
-        # Gather logs to pass to the callback
-        batch_logs = {
-            'loss': loss.item(),
-            # You can add more metrics here if needed
-        }
-
-        callbacks.on_train_batch_end(batch, batch_logs)
-
-        # Update the batch progress bar (showing loss, for instance)
         if pbar is not None:
-            pbar.update_batch(loss=loss.item())
+            pbar.start_epoch(1)
+            pbar.start_batch(total_batches=len(trainloader))
 
-    # End the batch-level progress bar
-    if pbar is not None:
-        pbar.end_batch()
+        for _, batch in enumerate(trainloader):
+            # Move data onto device
+            inputs = batch['data'].to(device)
+            targets = batch['target'].to(device)
 
-    # Gather final epoch logs from metrics
-    epoch_logs = {m.name: m.value for m in metrics.values()}
+            callbacks.on_train_batch_begin(batch)
+
+            # Forward pass
+            outputs = model(inputs)
+            loss = criterion(outputs, targets)
+
+            # Backward pass
+            optimizer.zero_grad()
+            loss['loss_total'].backward()
+            optimizer.step()
+
+            # Update metrics
+            # TODO: write some logic to decide which outputs go into which metrics
+            # function in which order (i.e. 'embeddings', 'logits', 'probs', 'preds').
+            # Currently just assumes preds, like multiclass classification
+            metrics.update(outputs['preds'], targets)
+
+            # Optional: Step LR scheduler
+            if lr_scheduler is not None:
+                lr_scheduler.step()
+
+            # Gather logs to pass to the callback
+            batch_logs = {
+                'loss': loss['loss_total'].item(),
+                # You can add more metrics here if needed
+            }
+
+            callbacks.on_train_batch_end(batch, batch_logs)
+
+            # Update the batch progress bar (showing loss, for instance)
+            if pbar is not None:
+                pbar.update_batch(loss=loss['loss_total'].item())
+
+        # End the batch-level progress bar
+        if pbar is not None:
+            pbar.end_batch()
+
+        # Gather final epoch logs from metrics
+        epoch_logs = metrics.compute()
+        print(epoch_logs)
+
+        # TODO: work on terminal output. Do we want eval metrics in there too?
+
     return epoch_logs
 
 def train(

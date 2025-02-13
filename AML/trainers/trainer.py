@@ -9,6 +9,7 @@ from AML.loss import _build_loss
 from AML.metrics import _build_metrics
 from AML.models import _build_model
 from AML.trainers.train import train, train_one_epoch
+from AML.utils.training import TrainingProgressBar
 
 
 class Trainer:
@@ -80,7 +81,10 @@ class Trainer:
             lr_scheduler=None,  # TODO
             metrics=self.metrics['train'],
             callbacks=self.callbacks,
-            pbar=None,
+            pbar=TrainingProgressBar(
+                total_epochs=self.config['TRAINING']['epochs'],
+                eval_frequency=self.config['TRAINING']['eval_interval']
+            ),
         )
 
     def train(self):
