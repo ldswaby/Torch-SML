@@ -108,7 +108,11 @@ SCHEMA = {
             'Validation': LIST_WITH_KWARGS(metric_opts),
         }
     },
-    'CALLBACKS': LIST_WITH_KWARGS(callback_opts)
+    'CALLBACKS': {
+        **LIST_WITH_KWARGS(callback_opts),
+        'required': False,
+        'default': []      # If omitted or None, treat as an empty list
+    }
 }
 
 

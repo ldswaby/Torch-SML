@@ -3,12 +3,16 @@ DATASET:
   kwargs:
     root: /Users/lukeswaby/Desktop/CODING/AML/data/fmnist
     download: True
-  split_method:
+  split_method:  # NOTE: won't be used if dataset has a 'train' arg
     name: holdout
     kwargs:
       train_ratio: 0.7
       val_ratio: 0.15  # Can be 0
       test_ratio: 0.15  # Can be 0
+
+TRANSFORMS:
+  # TODO
+
 
 MODEL:
   name: wide_resnet50_2
@@ -67,9 +71,9 @@ METRICS:
     #----
 
 CALLBACKS:
-  - name: Monitor
-    kwargs:
-      monitor: # TODO
-      mode: min
-      delta: 0
-      verbose: True
+  # - name: Monitor
+  #   kwargs:
+  #     monitor: # TODO: configure so can choose from eval or training metrics?
+  #     mode: min
+  #     delta: 0
+  #     verbose: True

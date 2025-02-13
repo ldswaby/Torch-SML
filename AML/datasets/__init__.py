@@ -28,7 +28,8 @@ def _build_dataset(config: dict) -> Dict[str, Dataset]:
     Builds and returns a dictionary of dataset splits (e.g., train, test, val)
     based on the provided configuration. If the underlying dataset class
     supports a 'train' argument (pre-split train/test), it will load each subset
-    directly. Otherwise, it will load the entire dataset and split it manually.
+    directly. Otherwise, it will load the entire dataset and split it manually
+    according to the specified parameters.
 
     Args:
         config (dict): Configuration dictionary with the following structure:

@@ -11,7 +11,7 @@ cfg = Config('AML/config/image_classification_config.yaml')
 # criterion = _build_loss(config=cfg)
 trainer = Trainer(cfg)
 
-breakpoint()
+# breakpoint()
 
 if __name__ == '__main__':
     # Necessary for multiprocessing on macOS and Windows
