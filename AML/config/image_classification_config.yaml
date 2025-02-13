@@ -11,8 +11,12 @@ DATASET:
       test_ratio: 0.15  # Can be 0
 
 TRANSFORMS:
-  # TODO
-
+  - name: ToTensor
+    kwargs:
+  - name: Normalize
+    kwargs:
+      mean: [0.5]
+      std: [0.5]
 
 MODEL:
   name: wide_resnet50_2

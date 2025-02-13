@@ -1,4 +1,4 @@
-import warnings
+import warnings, inspect
 from typing import List, Optional, Union
 
 import torchmetrics
@@ -23,21 +23,18 @@ modules = [
 
 # Register torchmetrics
 for module in modules:
-    for attr_name in dir(module):
-        attr = getattr(module, attr_name)
+    for name, obj in inspect.getmembers(module):
         # Check if the attribute is a class and a subclass of torchmetrics.Metric
-        if isinstance(attr, type) and issubclass(attr, Metric) and attr is not Metric:
+        if inspect.isclass(obj) and issubclass(obj, Metric) and obj is not Metric:
             # Register the metric with its class name
             try:
-                globals()[attr_name] = attr
-                METRIC_REGISTRY.register(name=attr_name)(attr)
+                globals()[name] = obj
+                METRIC_REGISTRY.register(name=name)(obj)
             except KeyError:
                 # Metric already registered, skip
                 continue
 
-
-del module, modules, attr, attr_name
-
+del module, modules, obj, name
 
 def _build_metrics(config: dict) -> dict:
     """Returns dict of MetricCollectios (one per dataset)
@@ -48,16 +45,16 @@ def _build_metrics(config: dict) -> dict:
     Returns:
         dict: _description_
     """
-    metrics = {}
+    metrics_dict = {}
 
     for dset, _mtrcs in config['METRICS'].items():
         dset = dset.lower()
         dset_mtrcs = []
         for _m in _mtrcs:
             dset_mtrcs.append(METRIC_REGISTRY.get(_m['name'])(**_m['kwargs']))
-        metrics[dset] = MetricCollection(dset_mtrcs, prefix=f'{dset}/')
+        metrics_dict[dset] = MetricCollection(dset_mtrcs, prefix=f'{dset}/')
 
-    return metrics
+    return metrics_dict
 
 
 def _process_metrics(metrics: Optional[Union[List[Metric], MetricCollection]] = None):

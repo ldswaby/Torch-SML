@@ -11,6 +11,7 @@ from AML.models import MODEL_REGISTRY
 from AML.callbacks import CALLBACK_REGISTRY
 from AML.utils import fetch_pkg_subclasses
 from AML.utils.data.splitters import DATA_SPLITTER_REGISTRY
+from AML.transforms import TRANSFORM_REGISTRY
 
 # Optional vars
 dataset_opts = DATASET_REGISTRY.list_keys()
@@ -20,6 +21,7 @@ metric_opts = METRIC_REGISTRY.list_keys()
 callback_opts = CALLBACK_REGISTRY.list_keys()
 optimizer_opts = list(fetch_pkg_subclasses(optim, optim.Optimizer).keys())
 data_splitter_opts = DATA_SPLITTER_REGISTRY.list_keys()
+transform_opts = TRANSFORM_REGISTRY.list_keys()
 device_opts = ['cpu', 'cuda', 'mps']
 
 # Arg checks
@@ -78,6 +80,11 @@ SCHEMA = {
                 }
             }
         },
+    },
+    'TRANSFORMS': {
+        **LIST_WITH_KWARGS(transform_opts),
+        'required': False,
+        'default': []      # If omitted or None, treat as an empty list
     },
     'MODEL': {
         'type': 'dict',

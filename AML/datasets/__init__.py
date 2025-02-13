@@ -1,5 +1,5 @@
 import inspect
-from typing import Dict
+from typing import Callable, Dict, Optional
 
 import torch
 from torch.utils.data import DataLoader, Dataset
@@ -13,6 +13,7 @@ import inspect
 from typing import Dict
 
 from ..utils.data.splitters import _data_splitter_factory
+from ..transforms import _build_transforms
 from . import vision
 from .base import BaseDataset
 from .csv_dataset import CSVDataset
@@ -60,6 +61,12 @@ def _build_dataset(config: dict) -> Dict[str, Dataset]:
 
     # Check if the dataset supports a 'train' parameter in its __init__
     sig = inspect.signature(dataset_cls.__init__)
+
+    # Add transforms
+    # NOTE: this necessitates that any dataset with transforms has to have a transform
+    # arg to use this feature
+    if 'transform' in sig.parameters:
+        dataset_kwargs['transform'] = _build_transforms(config)
 
     if 'train' in sig.parameters:
         # ----------------------------------------------------------

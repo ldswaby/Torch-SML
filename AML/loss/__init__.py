@@ -1,3 +1,4 @@
+import inspect
 from torch import nn
 from torch.nn import Module
 
@@ -16,14 +17,13 @@ modules = [
 
 # Register torch loss functions
 for module in modules:
-    for attr_name in dir(module):
-        attr = getattr(module, attr_name)
+    for name, obj in inspect.getmembers(module):
         # Check if the attribute is a class and a subclass of torch.nn.Module
-        if isinstance(attr, type) and issubclass(attr, Module) and 'Loss' in attr_name:
+        if inspect.isclass(obj) and issubclass(obj, Module) and 'Loss' in name:
             # Register the loss with its class name
             try:
-                globals()[attr_name] = attr
-                LOSS_REGISTRY.register(name=attr_name)(attr)
+                globals()[name] = obj
+                LOSS_REGISTRY.register(name=name)(obj)
             except KeyError:
                 # Loss function already registered, skip
                 continue
@@ -50,4 +50,4 @@ def _build_loss(config: dict) -> CompositeLoss:
     return CompositeLoss(loss_fns, weights)
 
 # Cleanup namespace
-del module, modules, attr, attr_name, nn
+del module, modules, obj, name, nn

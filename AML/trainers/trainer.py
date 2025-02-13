@@ -4,6 +4,7 @@ from AML.utils import set_torch_device
 from AML.callbacks import _build_callbacks
 from AML.config import Config
 from AML.datasets import _build_dataset, _build_dataloaders
+from AML.transforms import _build_transforms
 from AML.loss import _build_loss
 from AML.metrics import _build_metrics
 from AML.models import _build_model
@@ -17,6 +18,7 @@ class Trainer:
     def __init__(self, config: Config) -> None:
         self.config = config
         self.device = set_torch_device()
+        # self.transforms = self._build_transforms()
         self.datasets = self._build_dataset()
         self.dataloaders = self._build_dataloaders()
         self.model = self._build_model()
@@ -24,6 +26,11 @@ class Trainer:
         self.optimizer = self._build_optimizer()
         self.metrics = self._build_metrics()
         self.callbacks = self._build_callbacks()
+
+    # def _build_transforms(self):
+    #     """Build data transforms
+    #     """
+    #     return _build_transforms(self.config)
 
     def _build_dataset(self):
         """Builds and splits dataset according to config

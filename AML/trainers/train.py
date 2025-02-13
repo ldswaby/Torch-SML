@@ -51,12 +51,10 @@ def train_one_epoch(
     if pbar is not None:
         pbar.start_batch(total_batches=len(trainloader))
 
-    breakpoint()
-
     for _, batch in enumerate(trainloader):
         # Move data onto device
-        inputs = batch['inputs'].to(device)
-        targets = batch['targets'].to(device)
+        inputs = batch['data'].to(device)
+        targets = batch['target'].to(device)
 
         callbacks.on_train_batch_begin(batch)
 
