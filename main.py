@@ -10,12 +10,13 @@ cfg = Config('AML/config/image_classification_config.yaml')
 # metrics = _build_metrics(config=cfg)
 # criterion = _build_loss(config=cfg)
 trainer = Trainer(cfg)
+# breakpoint()
 
 if __name__ == '__main__':
     # Necessary for multiprocessing on macOS and Windows
 
     # TODO: add tranasform option for datasets
-    trainer.train_one_epoch()
+    trainer.train()
 
 # train_metrics = metrics['Train']
 # val_metrics = metrics['Validation']

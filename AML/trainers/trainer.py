@@ -27,6 +27,10 @@ class Trainer:
         self.optimizer = self._build_optimizer()
         self.metrics = self._build_metrics()
         self.callbacks = self._build_callbacks()
+        self.pbar = TrainingProgressBar(
+            total_epochs=self.config['TRAINING']['epochs'],
+            eval_frequency=self.config['TRAINING']['eval_interval']
+        )
 
     # def _build_transforms(self):
     #     """Build data transforms
@@ -81,11 +85,21 @@ class Trainer:
             lr_scheduler=None,  # TODO
             metrics=self.metrics['train'],
             callbacks=self.callbacks,
-            pbar=TrainingProgressBar(
-                total_epochs=self.config['TRAINING']['epochs'],
-                eval_frequency=self.config['TRAINING']['eval_interval']
-            ),
+            pbar=self.pbar,
         )
 
     def train(self):
-        raise NotImplementedError
+        return train(
+            model=self.model,
+            trainloader=self.dataloaders['train'],
+            optimizer=self.optimizer,
+            criterion=self.loss,
+            epochs=self.config['TRAINING']['epochs'],
+            evalloader=self.dataloaders['val'],
+            eval_interval=self.config['TRAINING']['eval_interval'],
+            device=self.device,
+            lr_scheduler=None,  # TODO
+            metrics=self.metrics['validation'],
+            callbacks=self.callbacks,
+            pbar=self.pbar,
+        )
