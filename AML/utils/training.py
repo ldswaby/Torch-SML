@@ -1,5 +1,14 @@
-from rich.progress import (BarColumn, Progress, SpinnerColumn, TextColumn,
-                           TimeElapsedColumn, TimeRemainingColumn)
+# training_progress_bar.py
+from typing import Dict, Any
+
+from rich.progress import (
+    BarColumn,
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+    TimeElapsedColumn,
+    TimeRemainingColumn
+)
 
 __all__ = [
     'TrainingProgressBar'
@@ -7,27 +16,29 @@ __all__ = [
 
 
 class TrainingProgressBar:
-    """Manages Rich progress bars for training (epoch/batch) and evaluation.
+    """Manages Rich progress bars for training, evaluation, and testing.
 
-    This class separates the progress bar logic from the training loop.
-    An external training loop calls these methods to display progress.
+    An external training or testing loop calls these methods to display progress.
 
-    Usage example:
-        with TrainingProgressBar(total_epochs=10) as pbar:
-            for epoch in range(total_epochs):
-                pbar.start_epoch(epoch)
-                pbar.start_batch(total_batches=batches_per_epoch)
-                for _ in range(batches_per_epoch):
-                    # ... training step
-                    pbar.update_batch(loss=0.1234)
-                pbar.end_batch()
-                pbar.update_epoch()
-                pbar.end_epoch()
-
-                if (epoch + 1) % eval_frequency == 0:
-                    pbar.start_eval(epoch)
-                    # ... evaluation step
-                    pbar.end_eval(accuracy=75.5)
+    Usage Example:
+        >>> with TrainingProgressBar(total_epochs=10) as pbar:
+        ...     # Train
+        ...     for epoch in range(10):
+        ...         pbar.start_epoch(epoch)
+        ...         pbar.start_batch(total_batches=batches_per_epoch)
+        ...         for batch in range(batches_per_epoch):
+        ...             # training step ...
+        ...             pbar.update_batch(loss=0.1234)
+        ...         pbar.end_batch()
+        ...         pbar.update_epoch()
+        ...         pbar.end_epoch()
+        ...
+        ...     # Test
+        ...     pbar.start_test(total_batches=test_batches)
+        ...     for batch in range(test_batches):
+        ...         # testing step ...
+        ...         pbar.update_test(loss=0.5678)
+        ...     pbar.end_test()
     """
 
     def __init__(self, total_epochs: int, eval_frequency: int = 1):
@@ -41,10 +52,11 @@ class TrainingProgressBar:
         self.total_epochs = total_epochs
         self.eval_frequency = eval_frequency
 
-        self.progress = None
-        self.epoch_task_id = None
-        self.batch_task_id = None
-        self.eval_task_id = None
+        self.progress: Progress = None
+        self.epoch_task_id: int = None
+        self.batch_task_id: int = None
+        self.eval_task_id: int = None
+        self.test_task_id: int = None
 
     def __enter__(self):
         """Enter context manager and create the Rich Progress object."""
@@ -56,7 +68,7 @@ class TrainingProgressBar:
             TextColumn("[yellow]{task.fields[extra]}"),
             TimeElapsedColumn(),
             TimeRemainingColumn(),
-            expand=True
+            expand=True,
         )
         self.progress.__enter__()
 
@@ -72,45 +84,59 @@ class TrainingProgressBar:
         """Exit context manager, close the Progress object."""
         self.progress.__exit__(exc_type, exc_val, exc_tb)
 
+
+
+    # -------------------------
+    # PROCESSING METHODS
+    # -------------------------
+    def _logs2str(self, logs: Dict[str, Any]):
+        out = ''
+        for metric, value in logs.items():
+            out += f"{metric.split('/')[-1]}: {value.item():.4f} "
+        return out
+
+    # -------------------------
+    # EPOCH-LEVEL METHODS
+    # -------------------------
     def start_epoch(self, current_epoch: int) -> None:
         """Prepare the display for a new epoch.
 
         Args:
             current_epoch (int): Index of the current epoch (0-based).
         """
-        # Optionally, you can show some message or reset states here.
-        # The epoch progress bar itself is created in __enter__ (self.epoch_task_id).
+        # Could reset or log a message here if desired.
         pass
 
-    def update_epoch(self) -> None:
+    def update_epoch(self, epoch_logs: Dict[str, Any]) -> None:
         """Advance the epoch progress bar by one."""
         self.progress.update(
             self.epoch_task_id,
             advance=1,
-            extra="Epoch Complete"
+            extra=self._logs2str(epoch_logs)
         )
 
     def end_epoch(self) -> None:
         """End the current epoch display (optional cleanup)."""
-        # Nothing to remove here, since the epoch task persists
-        # until all epochs are complete.
+        # No removal needed, since the epoch task persists until all epochs complete.
         pass
 
+    # -------------------------
+    # BATCH-LEVEL METHODS (TRAIN)
+    # -------------------------
     def start_batch(self, total_batches: int) -> None:
-        """Create a new sub-task for batch iteration.
+        """Create a new sub-task for training batches.
 
         Args:
             total_batches (int): Total number of batches in this epoch.
         """
-        # Create a new task for batch-level progress
         self.batch_task_id = self.progress.add_task(
-            "[magenta]Batches",
+            "[magenta]Train",
             total=total_batches,
             extra=""
         )
 
     def update_batch(self, loss: float) -> None:
-        """Advance the batch progress by one and display the loss.
+        """Advance the train batch progress by one and display the loss.
 
         Args:
             loss (float): Current batch loss (or other metric).
@@ -123,11 +149,14 @@ class TrainingProgressBar:
             )
 
     def end_batch(self) -> None:
-        """Remove the batch sub-task (cleanup after finishing an epoch)."""
+        """Remove the train batch sub-task."""
         if self.batch_task_id is not None:
             self.progress.remove_task(self.batch_task_id)
             self.batch_task_id = None
 
+    # -------------------------
+    # EVALUATION METHODS
+    # -------------------------
     def start_eval(self, current_epoch: int) -> None:
         """Create a sub-task for evaluation.
 
@@ -135,12 +164,13 @@ class TrainingProgressBar:
             current_epoch (int): Index of the current epoch (0-based).
         """
         self.eval_task_id = self.progress.add_task(
-            f"[green]Evaluation (Epoch {current_epoch + 1})",
+            f"[green]Eval (Epoch {current_epoch})",
             total=1,
-            extra="Evaluating..."
+            extra="Evaluating...",
+            insert_before=self.epoch_task_id
         )
 
-    def end_eval(self, accuracy: float) -> None:
+    def end_eval(self, eval_logs: Dict[str, Any]) -> None:
         """Complete the evaluation sub-task and remove it.
 
         Args:
@@ -150,7 +180,41 @@ class TrainingProgressBar:
             self.progress.update(
                 self.eval_task_id,
                 advance=1,
-                extra=f"Accuracy: {accuracy:.2f}%"
+                extra=self._logs2str(eval_logs)
             )
-            self.progress.remove_task(self.eval_task_id)
+            # self.progress.remove_task(self.eval_task_id)
             self.eval_task_id = None
+
+    # -------------------------
+    # TEST METHODS
+    # -------------------------
+    def start_test(self, total_batches: int) -> None:
+        """Create a new sub-task for test batches (in a different color).
+
+        Args:
+            total_batches (int): Total number of test batches.
+        """
+        self.test_task_id = self.progress.add_task(
+            "[blue]Test Batches",
+            total=total_batches,
+            extra=""
+        )
+
+    def update_test(self, loss: float) -> None:
+        """Advance the test batch progress and display the loss.
+
+        Args:
+            loss (float): Current batch loss (or other metric).
+        """
+        if self.test_task_id is not None:
+            self.progress.update(
+                self.test_task_id,
+                advance=1,
+                extra=f"Loss: {loss:.4f}"
+            )
+
+    def end_test(self) -> None:
+        """Remove the test sub-task."""
+        if self.test_task_id is not None:
+            self.progress.remove_task(self.test_task_id)
+            self.test_task_id = None

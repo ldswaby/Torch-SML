@@ -99,7 +99,10 @@ class Trainer:
             eval_interval=self.config['TRAINING']['eval_interval'],
             device=self.device,
             lr_scheduler=None,  # TODO
-            metrics=self.metrics['validation'],
+            train_metrics=self.metrics['train'],
+            val_metrics=self.metrics['validation'],
+            test_metrics=self.metrics['test'],
             callbacks=self.callbacks,
+            # pbar=None,
             pbar=self.pbar,
         )

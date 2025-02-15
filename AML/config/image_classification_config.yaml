@@ -30,7 +30,7 @@ MODEL:
 
 TRAINING:
   epochs: 100
-  eval_interval: 5
+  eval_interval: 1
   batch_size: 32
   Loss:
     - name: CrossEntropyLoss
