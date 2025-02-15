@@ -181,10 +181,11 @@ def train(
                     device=device,
                     metrics=val_metrics,
                     callbacks=callbacks,
-                    pbar=pbar
+                    pbar=pbar,
+                    validation=True
                 )
-                if pbar is not None:
-                    pbar.end_eval(eval_logs)
+                # if pbar is not None:
+                #     pbar.end_eval(eval_logs)
 
             callbacks.on_epoch_end(epoch, train_logs)
 
@@ -203,5 +204,5 @@ def train(
             callbacks=callbacks,
             pbar=pbar
         )
-        pbar.end_test(test_logs)
+        # pbar.end_test(test_logs)
     return train_logs

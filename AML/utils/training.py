@@ -168,33 +168,33 @@ class TrainingProgressBar:
     #         insert_before=self.epoch_task_id
     #     )
 
-    def end_eval(self, eval_logs: Dict[str, Any]) -> None:
-        """Complete and remove the eval sub-task, then log results above the bars."""
-        if self.eval_task_id is not None:
-            # self.progress.update(
-            #     self.eval_task_id,
-            #     advance=1,
-            #     extra=self._logs2str(eval_logs)
-            # )
-            # self.progress.remove_task(self.eval_task_id)
-            # self.eval_task_id = None
+    # def end_eval(self, eval_logs: Dict[str, Any]) -> None:
+    #     """Complete and remove the eval sub-task, then log results above the bars."""
+    #     # if self.eval_task_id is not None:
+    #         # self.progress.update(
+    #         #     self.eval_task_id,
+    #         #     advance=1,
+    #         #     extra=self._logs2str(eval_logs)
+    #         # )
+    #         # self.progress.remove_task(self.eval_task_id)
+    #         # self.eval_task_id = None
 
-        # This logs a line *above* the live display (i.e., above the train bar)
-        self.progress.log(
-            f"[green bold]Eval results:[/green bold] {self._logs2str(eval_logs)}"
-        )
+    #     # This logs a line *above* the live display (i.e., above the train bar)
+    #     self.progress.log(
+    #         f"[green bold]Eval results:[/green bold] {self._logs2str(eval_logs)}"
+    #     )
 
     # -------------------------
     # TEST METHODS
     # -------------------------
-    def start_test(self, total_batches: int) -> None:
+    def start_test(self, total_batches: int, validation: bool=True) -> None:
         """Create a new sub-task for test batches (in a different color).
 
         Args:
             total_batches (int): Total number of test batches.
         """
         self.test_task_id = self.progress.add_task(
-            "[blue]Test Batches",
+            "[blue]Eval" if validation else "[blue]Test",
             total=total_batches,
             extra=""
         )
@@ -218,13 +218,21 @@ class TrainingProgressBar:
                 extra=f"Loss: {loss:.4f}"
             )
 
-    def end_test(self, test_logs: Optional[Dict[str, Any]] = None) -> None:
+    def end_test(
+        self,
+        test_logs: Dict[str, Any],
+        validation: bool=True
+    ) -> None:
         """Remove the test sub-task."""
         if self.test_task_id is not None:
             self.progress.remove_task(self.test_task_id)
             self.test_task_id = None
 
-        if test_logs is not None:
+        if validation:
+            self.progress.log(
+                f"[green bold]Eval results:[/green bold] {self._logs2str(test_logs)}"
+            )
+        else:
             self.progress.log(
                 f"[red bold]Test results:[/red bold] {self._logs2str(test_logs)}"
             )

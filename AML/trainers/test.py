@@ -18,7 +18,8 @@ def test(
     device: torch.device = torch.device('cpu'),
     metrics: Optional[Union[List[Metric], MetricCollection]] = None,
     callbacks: Optional[Union[List[Callback], CallbackList]] = None,
-    pbar: Optional[TrainingProgressBar] = None
+    pbar: Optional[TrainingProgressBar] = None,
+    validation: bool=False
 ) -> dict:
     """Evaluates the model on a test dataset, using a shared TrainingProgressBar.
 
@@ -32,6 +33,7 @@ def test(
         metrics (Optional[Union[List[Metric], MetricCollection]], optional): Metrics. Defaults to None.
         callbacks (Optional[Union[List[Callback], CallbackList]], optional): Callbacks. Defaults to None.
         pbar (Optional[TrainingProgressBar], optional): Rich progress bar. Defaults to None.
+        validation: validation epoch or test epoch
 
     Returns:
         dict: Dictionary of computed metrics/results.
@@ -48,7 +50,7 @@ def test(
 
     # Don't open a second context manager: just call the pbar methods if available.
     if pbar is not None:
-        pbar.start_test(total_batches=len(testloader))
+        pbar.start_test(total_batches=len(testloader), validation=validation)
 
     test_logs = {}
     with torch.no_grad():
@@ -71,9 +73,9 @@ def test(
             if pbar is not None:
                 pbar.update_test(loss=test_logs['loss'])
 
-    if pbar is not None:
-        pbar.end_test()
 
-    results = metrics.compute()
-    callbacks.on_test_end(results)
-    return results
+    test_logs = metrics.compute()
+    if pbar is not None:
+        pbar.end_test(test_logs, validation=validation)
+    callbacks.on_test_end(test_logs)
+    return test_logs
