@@ -172,8 +172,8 @@ def train(
 
             # Evaluate if needed
             if evalloader and (epoch % eval_interval == 0):
-                if pbar is not None:
-                    pbar.start_eval(epoch)
+                # if pbar is not None:
+                #     pbar.start_eval(epoch)
                 eval_logs = test(
                     model=model,
                     testloader=evalloader,

@@ -155,29 +155,29 @@ class TrainingProgressBar:
     # -------------------------
     # EVALUATION METHODS
     # -------------------------
-    def start_eval(self, current_epoch: int) -> None:
-        """Create a sub-task for evaluation.
+    # def start_eval(self, current_epoch: int) -> None:
+    #     """Create a sub-task for evaluation.
 
-        Args:
-            current_epoch (int): Index of the current epoch (0-based).
-        """
-        self.eval_task_id = self.progress.add_task(
-            f"[green]Eval (Epoch {current_epoch})",
-            total=1,
-            extra="Evaluating...",
-            insert_before=self.epoch_task_id
-        )
+    #     Args:
+    #         current_epoch (int): Index of the current epoch (0-based).
+    #     """
+    #     self.eval_task_id = self.progress.add_task(
+    #         f"[green]Eval (Epoch {current_epoch})",
+    #         total=1,
+    #         extra="Evaluating...",
+    #         insert_before=self.epoch_task_id
+    #     )
 
     def end_eval(self, eval_logs: Dict[str, Any]) -> None:
         """Complete and remove the eval sub-task, then log results above the bars."""
         if self.eval_task_id is not None:
-            self.progress.update(
-                self.eval_task_id,
-                advance=1,
-                extra=self._logs2str(eval_logs)
-            )
-            self.progress.remove_task(self.eval_task_id)
-            self.eval_task_id = None
+            # self.progress.update(
+            #     self.eval_task_id,
+            #     advance=1,
+            #     extra=self._logs2str(eval_logs)
+            # )
+            # self.progress.remove_task(self.eval_task_id)
+            # self.eval_task_id = None
 
         # This logs a line *above* the live display (i.e., above the train bar)
         self.progress.log(
