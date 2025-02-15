@@ -96,6 +96,7 @@ class Trainer:
             criterion=self.loss,
             epochs=self.config['TRAINING']['epochs'],
             evalloader=self.dataloaders['val'],
+            testloader=self.dataloaders['test'],
             eval_interval=self.config['TRAINING']['eval_interval'],
             device=self.device,
             lr_scheduler=None,  # TODO

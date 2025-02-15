@@ -88,7 +88,6 @@ def train_one_epoch(
         pbar.end_batch()
 
     epoch_logs = metrics.compute()
-    print(epoch_logs)
     return epoch_logs
 
 
@@ -99,6 +98,7 @@ def train(
     criterion: Callable,
     epochs: int,
     evalloader: Optional[DataLoader] = None,
+    testloader: Optional[DataLoader] = None,
     eval_interval: int = 1,
     device: torch.device = torch.device('cpu'),
     lr_scheduler: Optional[_LRScheduler] = None,
@@ -187,8 +187,21 @@ def train(
                     pbar.end_eval(eval_logs)
 
             callbacks.on_epoch_end(epoch, train_logs)
+
             if callbacks.stop_training:
                 break
 
     callbacks.on_train_end(train_logs)
+
+    if testloader is not None:
+        test_logs = test(
+            model=model,
+            testloader=testloader,
+            criterion=criterion,
+            device=device,
+            metrics=val_metrics,
+            callbacks=callbacks,
+            pbar=pbar
+        )
+        pbar.end_test(test_logs)
     return train_logs

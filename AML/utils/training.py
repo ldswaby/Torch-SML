@@ -1,5 +1,5 @@
 # training_progress_bar.py
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from rich.progress import (
     BarColumn,
@@ -74,7 +74,7 @@ class TrainingProgressBar:
 
         # Create the main epoch task.
         self.epoch_task_id = self.progress.add_task(
-            "[cyan]Epochs",
+            "[cyan]Train",
             total=self.total_epochs,
             extra=""
         )
@@ -83,8 +83,6 @@ class TrainingProgressBar:
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Exit context manager, close the Progress object."""
         self.progress.__exit__(exc_type, exc_val, exc_tb)
-
-
 
     # -------------------------
     # PROCESSING METHODS
@@ -130,7 +128,7 @@ class TrainingProgressBar:
             total_batches (int): Total number of batches in this epoch.
         """
         self.batch_task_id = self.progress.add_task(
-            "[magenta]Train",
+            "[magenta]Epoch",
             total=total_batches,
             extra=""
         )
@@ -171,19 +169,20 @@ class TrainingProgressBar:
         )
 
     def end_eval(self, eval_logs: Dict[str, Any]) -> None:
-        """Complete the evaluation sub-task and remove it.
-
-        Args:
-            accuracy (float): Evaluation accuracy (or other metric).
-        """
+        """Complete and remove the eval sub-task, then log results above the bars."""
         if self.eval_task_id is not None:
             self.progress.update(
                 self.eval_task_id,
                 advance=1,
                 extra=self._logs2str(eval_logs)
             )
-            # self.progress.remove_task(self.eval_task_id)
+            self.progress.remove_task(self.eval_task_id)
             self.eval_task_id = None
+
+        # This logs a line *above* the live display (i.e., above the train bar)
+        self.progress.log(
+            f"[green bold]Eval results:[/green bold] {self._logs2str(eval_logs)}"
+        )
 
     # -------------------------
     # TEST METHODS
@@ -200,6 +199,12 @@ class TrainingProgressBar:
             extra=""
         )
 
+        # self.test_task_id = self.progress.add_task(
+        #     f"[red]Test",
+        #     total=total_batches
+        #     extra="Testing...",
+        # )
+
     def update_test(self, loss: float) -> None:
         """Advance the test batch progress and display the loss.
 
@@ -213,8 +218,13 @@ class TrainingProgressBar:
                 extra=f"Loss: {loss:.4f}"
             )
 
-    def end_test(self) -> None:
+    def end_test(self, test_logs: Optional[Dict[str, Any]] = None) -> None:
         """Remove the test sub-task."""
         if self.test_task_id is not None:
             self.progress.remove_task(self.test_task_id)
             self.test_task_id = None
+
+        if test_logs is not None:
+            self.progress.log(
+                f"[red bold]Test results:[/red bold] {self._logs2str(test_logs)}"
+            )
