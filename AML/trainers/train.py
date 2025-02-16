@@ -182,7 +182,7 @@ def train(
                     metrics=val_metrics,
                     callbacks=callbacks,
                     pbar=pbar,
-                    validation=True
+                    epoch=epoch
                 )
                 # if pbar is not None:
                 #     pbar.end_eval(eval_logs)

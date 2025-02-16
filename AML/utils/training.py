@@ -187,14 +187,14 @@ class TrainingProgressBar:
     # -------------------------
     # TEST METHODS
     # -------------------------
-    def start_test(self, total_batches: int, validation: bool=True) -> None:
+    def start_test(self, total_batches: int, epoch: Optional[int]=None) -> None:
         """Create a new sub-task for test batches (in a different color).
 
         Args:
             total_batches (int): Total number of test batches.
         """
         self.test_task_id = self.progress.add_task(
-            "[blue]Eval" if validation else "[blue]Test",
+            f"[blue]Eval epoch {epoch}" if epoch is not None else "[blue]Test",
             total=total_batches,
             extra=""
         )
@@ -221,16 +221,17 @@ class TrainingProgressBar:
     def end_test(
         self,
         test_logs: Dict[str, Any],
-        validation: bool=True
+        epoch: Optional[int]=None
     ) -> None:
         """Remove the test sub-task."""
         if self.test_task_id is not None:
             self.progress.remove_task(self.test_task_id)
             self.test_task_id = None
 
-        if validation:
+        if epoch is not None:
             self.progress.log(
-                f"[green bold]Eval results:[/green bold] {self._logs2str(test_logs)}"
+                f"[green bold]Eval results epoch {epoch}:"
+                f"[/green bold] {self._logs2str(test_logs)}"
             )
         else:
             self.progress.log(
