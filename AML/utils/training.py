@@ -199,12 +199,6 @@ class TrainingProgressBar:
             extra=""
         )
 
-        # self.test_task_id = self.progress.add_task(
-        #     f"[red]Test",
-        #     total=total_batches
-        #     extra="Testing...",
-        # )
-
     def update_test(self, loss: float) -> None:
         """Advance the test batch progress and display the loss.
 
@@ -230,7 +224,7 @@ class TrainingProgressBar:
 
         if epoch is not None:
             self.progress.log(
-                f"[green bold]Eval results epoch {epoch}:"
+                f"[green bold]Eval results (epoch {epoch}):"
                 f"[/green bold] {self._logs2str(test_logs)}"
             )
         else:

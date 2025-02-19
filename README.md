@@ -1,4 +1,6 @@
-Repo for ML
+Repo for Supervised ML
+
+**Currently under development
 
 # TODO:
 
