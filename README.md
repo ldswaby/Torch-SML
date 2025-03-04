@@ -1,39 +1,60 @@
-Repo for Supervised ML
+# Torch-SML
 
-**Currently under development
+> **A Flexible PyTorch-Based Supervised Machine Learning Library**
+> This repository provides a modular framework for building supervised machine learning pipelines, leveraging PyTorch, Torchvision, Torchmetrics, and more.
 
-# TODO:
+---
 
-* Callbacks:
-  * `CallbackList`
-  * `TensorboardWriter`
-* `train.py`
-  * Module/script containing `train_one_epoch` and `train` as well as a p`parse_args` etc
-* `evaluate.py`
-* Need a way of constructing the logs object passed through the callbacks.
-  * Should be flexible and contain the outputs of any model. E.g. predictions for classification/regression/embeddings
-  * There should be a `Metrics` object to track everything relevant to the problem, from accuracy and F1 scores to ROC curves and loss values. Configurable from yaml.
-  * Model should output a dict containing subset of keys `['pred_classes', 'pred_values', 'logits', 'embeddings']`
-  * Certain metrics will only be compatible with some of these outputs
+## Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Architecture](#architecture)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Usage](#usage)
+  - [Configuration File Structure](#configuration-file-structure)
+  - [Example YAML Configuration](#example-yaml-configuration)
+  - [Running the Pipeline](#running-the-pipeline)
+- [Extending the Library](#extending-the-library)
+  - [Adding Custom Datasets](#adding-custom-datasets)
+  - [Adding Custom Models](#adding-custom-models)
+  - [Adding Custom Transforms](#adding-custom-transforms)
+  - [Adding Custom Metrics](#adding-custom-metrics)
+- [Documentation](#documentation)
+- [Project Structure](#project-structure)
+- [Contributing](#contributing)
+- [License](#license)
+- [Authors and Acknowledgments](#authors-and-acknowledgments)
+- [Roadmap](#roadmap)
+- [Changelog](#changelog)
+
+---
+
+## Overview
 
 
-# Models
-  * Ouputs have to be of the format taken by classification metrics (e.g. for classification model using multiclass accuracy, outputs should be e.g. [2,1,2,1,0])
-  * Models forward should output a dict, with keys:
-    * `'outputs'`: Whatever format required by loss/metrics
-    * `'logits'`: Unprocessed final layer outputs
+---
 
+## Features
 
-# Loss
-* preds can be logits for both loss and metrics
-* In the train loop, loss fn inputs can be iteratively built up tp allow loss fns that take 2 or 3 inputs, as https://github.com/adambielski/siamese-triplet/blob/master/trainer.py#L65
+Key features and capabilities of the library:
 
+---
 
+## Architecture
 
+- Diagram of repo architecture
+- Explanation of how `main.py` composes the pipeline from the configuration file.
 
+---
 
-## Problem
+## Installation
 
-* Data outputs need to be in format required by training loop/model
+Instructions for installing the library (and any dependencies).
 
-Data (batches) => Model (logits/embeddings) => Loss/Metrics
+```bash
+# Clone repository
+git clone ...
+
+```
